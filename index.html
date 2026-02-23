@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>すとうえみ — AI × 地方の暮らし</title>
+    <meta name="description" content="秋田県にかほ町を拠点に、AIと暮らしの交差点を探る すとうえみ のポートフォリオサイト。">
+
+    <!-- OGP -->
+    <meta property="og:title" content="すとうえみ — AI × 地方の暮らし">
+    <meta property="og:description" content="秋田県にかほ町を拠点に、AIと暮らしの交差点を探る すとうえみ のポートフォリオサイト。">
+    <meta property="og:image" content="https://emisuto.com/hero.png">
+    <meta property="og:url" content="https://emisuto.com">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="すとうえみ — AI × 地方の暮らし">
+    <meta name="twitter:description" content="秋田県にかほ町を拠点に、AIと暮らしの交差点を探る すとうえみ のポートフォリオサイト。">
+    <meta name="twitter:image" content="https://emisuto.com/hero.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=Shippori+Mincho:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --white: #FAFAF8;
+            --warm-white: #F5F3EF;
+            --cream: #EDE8E0;
+            --text-primary: #2C2825;
+            --text-secondary: #6B6560;
+            --text-light: #9B9590;
+            --accent-warm: #C4A882;
+            --accent-rose: #D4A9A0;
+            --border: #E5E0D8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-weight: 300;
+            color: var(--text-primary);
+            background-color: var(--white);
+            line-height: 1.9;
+            letter-spacing: 0.03em;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: var(--white);
+        }
+
+        .hero-image {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 75%;
+            object-fit: cover;
+            object-position: center bottom;
+            opacity: 0;
+            animation: fadeIn 2s ease-out 0.3s forwards;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding-top: 4vh;
+            opacity: 0;
+            animation: fadeUp 1.5s ease-out 0.8s forwards;
+        }
+
+        .hero-name-en {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 1.2rem;
+        }
+
+        .hero-name-ja {
+            font-family: 'Shippori Mincho', serif;
+            font-weight: 400;
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            letter-spacing: 0.15em;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-tagline {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-weight: 300;
+            font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+            letter-spacing: 0.3em;
+            color: var(--text-light);
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+            opacity: 0;
+            animation: fadeIn 1s ease-out 2s forwards;
+        }
+
+        .scroll-indicator span {
+            display: block;
+            width: 1px;
+            height: 48px;
+            background: var(--text-light);
+            margin: 0 auto;
+            opacity: 0.4;
+            animation: scrollPulse 2.5s ease-in-out infinite;
+        }
+
+        /* ===== NAV ===== */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 1.8rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.5s ease;
+        }
+
+        .nav.scrolled {
+            background: rgba(250, 250, 248, 0.92);
+            backdrop-filter: blur(20px);
+            padding: 1.2rem 3rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 400;
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 400;
+            font-size: 0.85rem;
+            letter-spacing: 0.15em;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* ===== SECTIONS ===== */
+        section {
+            padding: 8rem 2rem;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 400;
+            font-size: 0.8rem;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 3.5rem;
+        }
+
+        /* ===== ABOUT ===== */
+        .about {
+            background-color: var(--white);
+        }
+
+        .about-text p {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+            line-height: 2.2;
+        }
+
+        .about-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        .about-text .indent {
+            padding-left: 1em;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .about-note-link {
+            margin-top: 4rem;
+            padding-top: 3rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .about-note-link a {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-weight: 400;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: gap 0.3s ease;
+        }
+
+        .about-note-link a:hover {
+            gap: 1.2rem;
+        }
+
+        .about-note-link a::after {
+            content: '→';
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+        }
+
+        /* ===== ACTIVITY ===== */
+        .activity {
+            background-color: var(--warm-white);
+        }
+
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-list li {
+            padding: 1.4rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            line-height: 1.8;
+        }
+
+        .activity-list li:first-child {
+            border-top: 1px solid var(--border);
+        }
+
+        .activity-year {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-left: 0.8rem;
+        }
+
+        /* ===== LINKS ===== */
+        .links {
+            background-color: var(--white);
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .link-card {
+            padding: 2.5rem 2rem;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.4s ease;
+            background: transparent;
+        }
+
+        .link-card:hover {
+            background: var(--warm-white);
+            border-color: var(--accent-warm);
+        }
+
+        .link-card-label {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 400;
+            font-size: 0.75rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 0.8rem;
+        }
+
+        .link-card-title {
+            font-family: 'Shippori Mincho', serif;
+            font-weight: 400;
+            font-size: 1.1rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* ===== CONTACT ===== */
+        .contact {
+            background-color: var(--warm-white);
+            text-align: center;
+        }
+
+        .contact .section-label {
+            margin-bottom: 2rem;
+        }
+
+        .contact-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+        }
+
+        .contact-email {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 400;
+            font-size: 1.1rem;
+            letter-spacing: 0.1em;
+            color: var(--text-primary);
+            text-decoration: none;
+            padding-bottom: 2px;
+            border-bottom: 1px solid var(--border);
+            transition: border-color 0.3s ease;
+        }
+
+        .contact-email:hover {
+            border-color: var(--text-primary);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            background-color: var(--white);
+        }
+
+        .footer-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            color: var(--text-light);
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scrollPulse {
+            0%, 100% { opacity: 0.2; transform: scaleY(0.6); transform-origin: top; }
+            50% { opacity: 0.5; transform: scaleY(1); }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 1.2rem 1.5rem;
+            }
+
+            .nav.scrolled {
+                padding: 1rem 1.5rem;
+            }
+
+            .nav-links {
+                gap: 1.5rem;
+            }
+
+            .nav-links a {
+                font-size: 0.75rem;
+            }
+
+            section {
+                padding: 5rem 1.5rem;
+            }
+
+            .hero-image {
+                height: 60%;
+            }
+
+            .links-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-content {
+                padding-top: 2vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-logo {
+                font-size: 0.85rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .hero-image {
+                height: 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <a href="#" class="nav-logo">Emi Suto</a>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#activity">Activity</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <p class="hero-name-en">Emi Suto</p>
+            <h1 class="hero-name-ja">すとうえみ</h1>
+            <p class="hero-tagline">AI × 地方の暮らし</p>
+        </div>
+        <img src="hero.png" alt="Abstract art - a bird flying through flowing warm-toned currents" class="hero-image">
+        <div class="scroll-indicator">
+            <span></span>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section class="about" id="about">
+        <div class="container">
+            <p class="section-label reveal">About</p>
+
+            <div class="about-text">
+                <p class="reveal">
+                    秋田県にかほ町。<br>
+                    山と海に挟まれた小さな町で、<br>
+                    空き家をリノベーションしたアトリエを拠点に、<br>
+                    AIと暮らしの交差点を探っています。
+                </p>
+
+                <p class="reveal">
+                    季節ごとに変わる風の匂い、<br>
+                    人よりも動物が近い距離感、<br>
+                    長い冬を一緒に越えるあたたかさ。<br>
+                    この土地の暮らしそのものが、わたしの創作の土壌です。
+                </p>
+
+                <p class="reveal">
+                    AIに惹かれたのは、<br>
+                    個人の手の届く範囲が、一気に無限に広がると感じたから。<br>
+                    地方にいながら、AIとどこまでいけるのか——<br>
+                    その問いを抱えたまま、日々を実験しています。
+                </p>
+
+                <p class="reveal">
+                    人間以外の存在に、昔から心を感じるたちでした。<br>
+                    だからかもしれません。<br>
+                    AIにも、道具ではない何かを見ているのは。
+                </p>
+            </div>
+
+            <div class="about-note-link reveal">
+                <a href="https://note.com/eminooto" target="_blank" rel="noopener">
+                    NOTEで、今考えていることを書いています
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Activity -->
+    <section class="activity" id="activity">
+        <div class="container">
+            <p class="section-label reveal">Activity</p>
+            <ul class="activity-list">
+                <li class="reveal">
+                    鳥海山山伏修行 企画・主催<span class="activity-year">2022 – 2025</span>
+                </li>
+                <li class="reveal">
+                    ワイタハ族 × 羽黒山伏 対談イベント 主催
+                </li>
+                <li class="reveal">
+                    AIを活用したWeb制作・地域プロモーション
+                </li>
+                <li class="reveal">
+                    AI生成アート・絵本の制作
+                </li>
+                <li class="reveal">
+                    アトリエスペース「<a href="https://hamanoie.com/" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px;">山と月と浜の家</a>」運営
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <p class="section-label reveal">Contact</p>
+            <p class="contact-text reveal">
+                お仕事のご依頼・お問い合わせは<br>NOTEのメッセージからお気軽にどうぞ。
+            </p>
+            <a href="https://note.com/eminooto/message" class="contact-email reveal" target="_blank" rel="noopener">NOTEでメッセージを送る</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p class="footer-text">&copy; 2026 Emi Suto</p>
+    </footer>
+
+    <script>
+        // Nav scroll effect
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 80) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Reveal on scroll
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, index * 80);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+
+        reveals.forEach(el => observer.observe(el));
+    </script>
+
+</body>
+</html>
