@@ -85,6 +85,10 @@
             animation: fadeIn 2s ease-out 0.3s forwards;
         }
 
+        .hero-image-mobile {
+            display: none;
+        }
+
         .hero-content {
             position: relative;
             z-index: 2;
@@ -439,8 +443,20 @@
             }
 
             .hero-image {
-                height: 68%;
-                object-position: right bottom;
+                display: none;
+            }
+
+            .hero-image-mobile {
+                display: block;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 70%;
+                object-fit: cover;
+                object-position: center top;
+                opacity: 0;
+                animation: fadeIn 2s ease-out 0.3s forwards;
             }
 
             .links-grid {
@@ -448,11 +464,7 @@
             }
 
             .hero-content {
-                position: absolute;
-                top: 28%;
-                left: 50%;
-                transform: translateX(-50%);
-                padding-top: 0;
+                padding-top: 2vh;
             }
         }
 
@@ -465,9 +477,8 @@
                 gap: 1rem;
             }
 
-            .hero-image {
+            .hero-image-mobile {
                 height: 65%;
-                object-position: right bottom;
             }
         }
     </style>
@@ -492,6 +503,7 @@
             <p class="hero-tagline">AI × 地方の暮らし</p>
         </div>
         <img src="hero.png" alt="Abstract art - a bird flying through flowing warm-toned currents" class="hero-image">
+        <img src="hero-mobile.png" alt="Abstract art - a bird flying through flowing warm-toned currents" class="hero-image-mobile">
         <div class="scroll-indicator">
             <span></span>
         </div>
