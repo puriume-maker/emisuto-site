@@ -1117,6 +1117,7 @@
         const sq = (x, y, s) => ctx.fillRect(Math.round(x), Math.round(y), s, s);
 
         function drawHero(now) {
+            if (!W || !H) { if (hero.clientWidth && hero.clientHeight) layout(); return; }   // 画面が かくれてる あいだは まつ
             if (t0 === null) t0 = now;
             const t = (now - t0) / 1000;
             const gap = 1, cell = cs - gap;

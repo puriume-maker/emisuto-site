@@ -321,6 +321,7 @@
 
         function resize() {
             const w = stage.clientWidth, h = stage.clientHeight;
+            if (!w || !h) return;   // 画面が かくれてる あいだは まつ
             const scale = h / LH;
             LW = Math.max(200, Math.round(w / scale));
             cv.width = LW; cv.height = LH;
@@ -657,9 +658,8 @@
         function loop(now) {
             const k = Math.min(3, (now - prev) / (1000 / 60));
             prev = now;
-            update(k);
-            stepParts(k);
-            render();
+            if (!skyCv) resize();
+            if (skyCv) { update(k); stepParts(k); render(); }
             requestAnimationFrame(loop);
         }
         requestAnimationFrame(loop);
