@@ -127,32 +127,31 @@
             margin-bottom: 14px;
         }
         .p1 .rec { color: var(--pink); animation: blink 1.2s steps(1) infinite; }
-        .hero h1 { font-weight: 400; line-height: 1.05; }
-        .hero h1 .ja {
-            display: block;
-            font-family: var(--pixel);
-            font-size: clamp(44px, 6.2vw, 100px);
-            letter-spacing: 0.02em;
-        }
-        .hero h1 .en {
-            display: block;
-            margin-top: 14px;
-            font-family: var(--grot);
-            font-weight: 700;
-            font-size: clamp(15px, 1.5vw, 20px);
-            letter-spacing: 0.5em;
-            color: var(--pink);
-        }
         .dialog {
             position: relative;
-            margin-top: 36px;
-            padding: 16px 22px 18px;
+            margin-top: 34px;
+            padding: 20px 22px 18px;
             background: var(--ink2);
             border: 3px solid var(--cream);
             box-shadow: 6px 6px 0 var(--lime);
             font-size: clamp(15px, 1.35vw, 19px);
             min-height: calc(2 * 1.9em + 34px);
             pointer-events: auto;
+        }
+        .sr-only {
+            position: absolute; width: 1px; height: 1px;
+            overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+        }
+        .dialog .speaker {
+            position: absolute;
+            left: 14px; top: -0.95em;
+            padding: 0 10px;
+            font-size: 13px;
+            line-height: 1.6;
+            letter-spacing: 0.1em;
+            color: var(--ink);
+            background: var(--lime);
+            border: 2px solid var(--ink);
         }
         .dialog .next {
             position: absolute;
@@ -236,7 +235,7 @@
         .clock:hover { background: var(--lime); color: var(--ink); }
         .clock:hover .adv { color: var(--ink); }
         /* 明るい空のときは 文字を こい色に */
-        .light-hero .hero .p1, .light-hero .hero h1 .ja { color: var(--ink); }
+        .light-hero .hero .p1 { color: var(--ink); }
         .light-hero .hero .p1 { opacity: 0.75; }
         .light-hero .hud:not(.scrolled) { color: var(--ink); }
         .light-hero .hud:not(.scrolled) .hud-stats { color: rgba(20, 17, 28, 0.7); }
@@ -491,12 +490,10 @@
                 width: auto;
                 padding: 76px 20px 0;
             }
-            .p1 { margin-bottom: 8px; }
-            .hero h1 .ja { font-size: 46px; }
-            .hero h1 .en { margin-top: 8px; font-size: 13px; }
+            .p1 { display: none; }
             .dialog { margin-top: 20px; padding: 12px 16px 14px; font-size: 15px; word-break: keep-all; }
             .hint { display: none; }
-            .clock { left: 12px; bottom: auto; top: 52px; font-size: 10px; padding: 4px 8px; }
+            .clock { left: 16px; bottom: auto; top: 50px; font-size: 10px; padding: 3px 8px; }
             .hero-menu { left: 0; right: 0; margin: 0 auto; width: fit-content; bottom: 18px; font-size: 14px; }
             .sec { padding-top: 90px; }
             .win { padding: 22px 18px; box-shadow: 6px 6px 0 var(--pink); }
@@ -533,8 +530,8 @@
         <canvas id="heroCanvas" aria-hidden="true"></canvas>
         <div class="hero-text" id="heroText">
             <p class="p1">PLAYER 1 <span class="rec">●</span> NOW PLAYING</p>
-            <h1><span class="ja">すとうえみ</span><span class="en">EMI SUTO</span></h1>
-            <div class="dialog" id="dialog"><p id="typeLine" aria-live="polite"></p><span class="next">▼</span></div>
+            <h1 class="sr-only">すとうえみ（Emi Suto）</h1>
+            <div class="dialog" id="dialog"><span class="speaker" aria-hidden="true">すとうえみ</span><p id="typeLine" aria-live="polite"></p><span class="next">▼</span></div>
         </div>
         <nav class="hero-menu" id="heroMenu" aria-label="メニュー">
             <p class="menu-head">WHAT DO?</p>
@@ -886,9 +883,9 @@
             const seaTop = Math.round(rows * 0.8);
             const textRow = mobile ? Math.ceil((heroText.getBoundingClientRect().bottom - hero.getBoundingClientRect().top) / cs) : 0;
             const peakC = Math.round(cols * (mobile ? 0.5 : 0.62));
-            const peakR = Math.round(mobile ? Math.max(textRow + 8, rows * 0.44) : rows * 0.34);
+            const peakR = Math.round(mobile ? Math.max(textRow + 12, rows * 0.56) : rows * 0.42);
             const peakH = seaTop - peakR;
-            const spread = cols * (mobile ? 0.24 : 0.17);
+            const spread = cols * (mobile ? 0.34 : 0.17);
 
             // 空（ディザで にじませた グラデーション）
             let sky = null;
@@ -908,10 +905,16 @@
             // 鳥海山の 稜線（すそ野がひろくて、てっぺんは ちょっと たいら）
             const ridge = [];
             for (let c = 0; c < cols; c++) {
-                const dx = Math.max(0, Math.abs(c - peakC) / spread - 0.12);
-                let h = peakH / (1 + Math.pow(dx, 1.45));
-                h += peakH * 0.05 * Math.exp(-(((c - (peakC - spread * 0.3)) / (spread * 0.1)) ** 2));
-                h += Math.sin(c * 0.9) * 0.5 + Math.sin(c * 0.31) * 0.8;
+                // 西（左・海がわ）は ながーい すそ野、東は すこし 急
+                const sp = c < peakC ? spread * 1.35 : spread * 1.05;
+                const dx = Math.max(0, Math.abs(c - peakC) / sp - 0.2);
+                let h = peakH / (1 + Math.pow(dx * 1.6, 1.25));
+                const bump = (at, w, k) => peakH * k * Math.exp(-(((c - at) / w) ** 2));
+                h += bump(peakC - sp * 0.3, sp * 0.14, 0.04);   // 七高山のこぶ
+                h += bump(peakC + sp * 0.12, sp * 0.06, 0.05);   // 新山のとんがり
+                h += bump(peakC + sp * 0.62, sp * 0.12, 0.05);   // 東の肩
+                h -= bump(peakC - sp * 0.1, sp * 0.06, 0.05);    // 火口の くぼみ
+                h += (Math.sin(c * 0.9) * 0.7 + Math.sin(c * 0.37) * 1.1 + Math.sin(c * 1.7) * 0.4) * (0.3 + h / peakH);
                 h = Math.max(0, h - peakH * 0.15);   // はしっこは 海まで ひらける
                 ridge.push(Math.round(seaTop - h));
             }
@@ -951,7 +954,7 @@
                     let color;
                     if (r === ridge[c]) color = P.rim;
                     else {
-                        const snowT = (r - top) / (peakH * 0.42);
+                        const snowT = (r - top) / (peakH * 0.35);
                         const lightT = 0.5 + (c - peakC) / spread * 0.35 - (r - ridge[c]) * 0.02;
                         if (snowT * 16 < 16 - b) color = c > peakC ? P.snow : P.snowS;
                         else color = lightT * 16 > b ? P.mtnL : P.mtn;
@@ -970,7 +973,7 @@
             const uniq = [...seen.values()];
 
             const turbines = (mobile ? [0.08, 0.2, 0.9] : [0.06, 0.13, 0.2, 0.88, 0.95])
-                .map((f, i) => ({ c: Math.round(cols * f), h: 9 + (i % 2) * 3, ph: i * 1.3 }));
+                .map((f, i) => ({ c: Math.round(cols * f), h: 7 + (i % 2) * 2, ph: i * 1.3 }));
             const town = Array.from({ length: Math.round(cols / 7) }, (_, i) => ({ c: Math.floor(hash(i, 7) * cols), ph: hash(i, 3) * 6 }));
             const stars = Array.from({ length: Math.round(cols * 0.5) }, (_, i) => {
                 const c = Math.floor(hash(i, 1) * cols), r = Math.floor(hash(i, 2) * (seaTop - 2));
