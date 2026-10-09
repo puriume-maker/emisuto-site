@@ -217,7 +217,31 @@
             color: var(--mute);
             pointer-events: none;
         }
-        .hint .touch { display: none; }
+        .hint { bottom: 58px; }
+        .clock {
+            position: absolute;
+            left: 24px; bottom: 18px;
+            z-index: 3;
+            padding: 6px 12px;
+            font-family: var(--bit);
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            color: var(--cream);
+            background: rgba(20, 17, 28, 0.85);
+            border: 2px solid var(--cream);
+            cursor: pointer;
+        }
+        .clock .ph { font-family: var(--pixel); letter-spacing: 0.05em; }
+        .clock .adv { color: var(--lime); }
+        .clock:hover { background: var(--lime); color: var(--ink); }
+        .clock:hover .adv { color: var(--ink); }
+        /* 明るい空のときは 文字を こい色に */
+        .light-hero .hero .p1, .light-hero .hero h1 .ja { color: var(--ink); }
+        .light-hero .hero .p1 { opacity: 0.75; }
+        .light-hero .hud:not(.scrolled) { color: var(--ink); }
+        .light-hero .hud:not(.scrolled) .hud-stats { color: rgba(20, 17, 28, 0.7); }
+        .light-hero .hud:not(.scrolled) .hud-stats b { color: var(--pink); }
+        .light-hero .hero .hint { color: rgba(20, 17, 28, 0.6); }
 
         /* ===== セクション共通 ===== */
         .sec { padding: 120px 0 40px; }
@@ -472,6 +496,7 @@
             .hero h1 .en { margin-top: 8px; font-size: 13px; }
             .dialog { margin-top: 20px; padding: 12px 16px 14px; font-size: 15px; word-break: keep-all; }
             .hint { display: none; }
+            .clock { left: 12px; bottom: auto; top: 52px; font-size: 10px; padding: 4px 8px; }
             .hero-menu { left: 0; right: 0; margin: 0 auto; width: fit-content; bottom: 18px; font-size: 14px; }
             .sec { padding-top: 90px; }
             .win { padding: 22px 18px; box-shadow: 6px 6px 0 var(--pink); }
@@ -518,6 +543,7 @@
             <a href="#party" class="mi">なかま</a>
             <a href="#letter" class="mi">てがみを おくる</a>
         </nav>
+        <button class="clock" id="clock" type="button" title="じかんを すすめる">NIKAHO <span class="time">--:--</span> ・ <span class="ph"></span> <span class="adv">▶▶</span></button>
         <p class="hint">CLICK THE MOUNTAIN ...?</p>
     </section>
 
@@ -792,10 +818,51 @@
         /* ============================================================
            2. HERO：ドットが降ってきて、夜の鳥海山になる
            ============================================================ */
-        const NIGHT = {
-            mtn: '#2A2766', mtnL: '#4347A8', snow: '#F3ECDD', snowS: '#B9B4D6',
-            shore: '#231E36', sea: '#16132A', seaL: '#24215A', crater: '#D8CDB4', town: '#FFB347'
+        // 時間帯ごとの いろ（にかほの 朝・昼・夕・夜）
+        const PHASES = {
+            morning: {
+                label: 'あさ', sky: ['#9CC2EA', '#C9D6EE', '#F3D3D0', '#F8E3C4'],
+                mtn: '#5E6FB0', mtnL: '#7D8FCC', snow: '#FFFFFF', snowS: '#D9DEF0', rim: '#FFFFFF',
+                shore: '#3C3F66', sea: '#5E86BE', seaL: '#86A9D6', path: ['#FFFFFF', '#FFF1C9'],
+                turbine: '#FFFFFF', stars: false, town: false, light: true, orb: 'sun',
+                sun: ['#FFF4D6', '#FFD7A0']
+            },
+            day: {
+                label: 'ひる', sky: ['#5FB2EE', '#86C6F2', '#B2DCF7', '#DDF1FB'],
+                mtn: '#3E7468', mtnL: '#5B9480', snow: '#FFFFFF', snowS: '#DCEBEA', rim: '#D4FF3A',
+                shore: '#2E4A3E', sea: '#2F7FC0', seaL: '#4F9BD6', path: ['#FFFFFF', '#D4FF3A'],
+                turbine: '#FFFFFF', stars: false, town: false, light: true, orb: 'sun',
+                sun: ['#FFFDF0', '#FFE58A']
+            },
+            dusk: {
+                label: 'ゆうがた', sky: ['#8F9AB0', '#C9C3A6', '#EFC883', '#F5A04A', '#EE6A3A'],
+                mtn: '#3A2B52', mtnL: '#5A3F68', snow: '#F7C9A6', snowS: '#C99A93', rim: '#FF5FA2',
+                shore: '#2A2036', sea: '#5B5873', seaL: '#7A7088', path: ['#FFC266', '#FF8A3D'],
+                turbine: '#2A2036', stars: false, town: true, light: true, orb: 'sun',
+                sun: ['#FFE9A8', '#FF9A4A']
+            },
+            night: {
+                label: 'よる', sky: null,
+                mtn: '#2A2766', mtnL: '#4347A8', snow: '#F3ECDD', snowS: '#B9B4D6', rim: '#FF5FA2',
+                shore: '#231E36', sea: '#16132A', seaL: '#24215A', path: ['#F3ECDD', '#D4FF3A'],
+                turbine: '#F3ECDD', stars: true, town: true, light: false, orb: 'moon'
+            }
         };
+        const PHASE_ORDER = ['morning', 'day', 'dusk', 'night'];
+        function nikahoNow() {
+            const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+            const get = t => +parts.find(p => p.type === t).value;
+            return { h: get('hour') % 24, m: get('minute') };
+        }
+        function phaseFor(h) {
+            if (h >= 5 && h < 9) return 'morning';
+            if (h >= 9 && h < 16) return 'day';
+            if (h >= 16 && h < 19) return 'dusk';
+            return 'night';
+        }
+        let phase = phaseFor(nikahoNow().h);
+        let P = PHASES[phase];
+
         const hero = document.querySelector('.hero');
         const cv = document.getElementById('heroCanvas');
         const ctx = cv.getContext('2d');
@@ -803,6 +870,14 @@
         const heroText = document.getElementById('heroText');
         let W, H, cs, S = null;
         const hash = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
+        const dpr = () => Math.min(window.devicePixelRatio || 1, 2);
+        function offscreen() {
+            const c = document.createElement('canvas');
+            c.width = W * dpr(); c.height = H * dpr();
+            const o = c.getContext('2d');
+            o.setTransform(dpr(), 0, 0, dpr(), 0, 0);
+            return [c, o];
+        }
 
         function buildScene() {
             const mobile = W < 820;
@@ -815,65 +890,108 @@
             const peakH = seaTop - peakR;
             const spread = cols * (mobile ? 0.24 : 0.17);
 
-            // 鳥海山の 稜線（すそ野がひろくて、てっぺんが ふたこぶ）
+            // 空（ディザで にじませた グラデーション）
+            let sky = null;
+            if (P.sky) {
+                const [c, o] = offscreen();
+                const n = P.sky.length - 1;
+                for (let r = 0; r < seaTop; r++) {
+                    const t = (r / seaTop) * n, i = Math.min(n - 1, Math.floor(t)), u = t - i;
+                    for (let cc = 0; cc < cols; cc++) {
+                        o.fillStyle = u * 16 > BAYER[r % 4][cc % 4] + 0.5 ? P.sky[i + 1] : P.sky[i];
+                        o.fillRect(cc * cs, r * cs, cs, cs);
+                    }
+                }
+                sky = c;
+            }
+
+            // 鳥海山の 稜線（すそ野がひろくて、てっぺんは ちょっと たいら）
             const ridge = [];
             for (let c = 0; c < cols; c++) {
-                const dx = Math.max(0, Math.abs(c - peakC) / spread - 0.12);   // てっぺんは ちょっと たいら
+                const dx = Math.max(0, Math.abs(c - peakC) / spread - 0.12);
                 let h = peakH / (1 + Math.pow(dx, 1.45));
                 h += peakH * 0.05 * Math.exp(-(((c - (peakC - spread * 0.3)) / (spread * 0.1)) ** 2));
                 h += Math.sin(c * 0.9) * 0.5 + Math.sin(c * 0.31) * 0.8;
+                h = Math.max(0, h - peakH * 0.15);   // はしっこは 海まで ひらける
                 ridge.push(Math.round(seaTop - h));
             }
             const top = Math.min(...ridge);
 
             const cells = [];
-            const add = (c, r, color, zone) => cells.push({ c, r, color, zone });
+            const add = (c, r, color) => cells.push({ c, r, color });
+
+            // 月 または 太陽（山より先に描いて、山のうしろに かくれるように）
+            let orb;
+            if (P.orb === 'moon') {
+                orb = { c: Math.round(cols * (mobile ? 0.8 : 0.86)), r: Math.round(mobile ? textRow + 7 : rows * 0.17), rad: mobile ? 4.5 : 5.5 };
+            } else if (phase === 'dusk') {
+                orb = { c: Math.round(cols * (mobile ? 0.14 : 0.2)), r: seaTop - 1, rad: mobile ? 7 : 10 };
+            } else if (phase === 'morning') {
+                orb = { c: Math.round(cols * (mobile ? 0.82 : 0.9)), r: Math.round(seaTop - peakH * 0.55), rad: mobile ? 4.5 : 6 };
+            } else {
+                orb = { c: Math.round(cols * (mobile ? 0.8 : 0.86)), r: Math.round(mobile ? textRow + 7 : rows * 0.15), rad: mobile ? 4.5 : 6 };
+            }
+            const R = Math.ceil(orb.rad);
+            for (let r = -R; r <= R; r++) for (let c = -R; c <= R; c++) {
+                const d2 = c * c + r * r;
+                if (d2 > orb.rad * orb.rad || orb.r + r >= seaTop - 1) continue;
+                let color;
+                if (P.orb === 'moon') {
+                    color = hash(c + 9, r + 3) > 0.84 && d2 < (orb.rad - 1.5) ** 2 ? '#D8CDB4' : COL.cream;
+                } else {
+                    const t = Math.sqrt(d2) / orb.rad;
+                    color = t * 16 > BAYER[(r + 40) % 4][(c + 40) % 4] + 6 ? P.sun[1] : P.sun[0];
+                }
+                add(orb.c + c, orb.r + r, color);
+            }
+
             for (let c = 0; c < cols; c++) {
                 for (let r = ridge[c]; r < seaTop - 1; r++) {
                     const b = BAYER[r % 4][c % 4] + 0.5;
                     let color;
-                    if (r === ridge[c]) color = COL.pink;               // 月あかりの ふち
+                    if (r === ridge[c]) color = P.rim;
                     else {
-                        const snowT = (r - top) / (peakH * 0.42);       // 上のほうは 雪
+                        const snowT = (r - top) / (peakH * 0.42);
                         const lightT = 0.5 + (c - peakC) / spread * 0.35 - (r - ridge[c]) * 0.02;
-                        if (snowT * 16 < 16 - b) color = (c > peakC ? NIGHT.snow : NIGHT.snowS);
-                        else color = lightT * 16 > b ? NIGHT.mtnL : NIGHT.mtn;
+                        if (snowT * 16 < 16 - b) color = c > peakC ? P.snow : P.snowS;
+                        else color = lightT * 16 > b ? P.mtnL : P.mtn;
                     }
-                    add(c, r, color, 'mtn');
+                    add(c, r, color);
                 }
-                add(c, seaTop - 1, NIGHT.shore, 'shore');
+                add(c, seaTop - 1, P.shore);
                 for (let r = seaTop; r < rows; r++) {
                     const t = (r - seaTop) / (rows - seaTop);
-                    add(c, r, (r % 3 === 0 && t * 16 > BAYER[r % 4][c % 4]) ? NIGHT.seaL : NIGHT.sea, 'sea');
+                    add(c, r, (r % 3 === 0 && t * 16 > BAYER[r % 4][c % 4]) ? P.seaL : P.sea);
                 }
             }
+            // 同じマスは あとから 描いたもの（山・海）を のこす
+            const seen = new Map();
+            cells.forEach(p => seen.set(p.c + ',' + p.r, p));
+            const uniq = [...seen.values()];
 
-            // 月（山と月と浜の、月）
-            const moon = { c: Math.round(cols * (mobile ? 0.8 : 0.86)), r: Math.round(mobile ? Math.max(textRow + 3, 0) + 4 : rows * 0.17), rad: mobile ? 4.5 : 5.5 };
-            for (let r = -6; r <= 6; r++) for (let c = -6; c <= 6; c++) {
-                if (c * c + r * r > moon.rad * moon.rad) continue;
-                const crater = hash(c + 9, r + 3) > 0.84 && c * c + r * r < (moon.rad - 1.5) ** 2;
-                add(moon.c + c, moon.r + r, crater ? NIGHT.crater : COL.cream, 'moon');
-            }
-
-            // 海ぞいの 風車と 町のあかり
             const turbines = (mobile ? [0.08, 0.2, 0.9] : [0.06, 0.13, 0.2, 0.88, 0.95])
                 .map((f, i) => ({ c: Math.round(cols * f), h: 9 + (i % 2) * 3, ph: i * 1.3 }));
             const town = Array.from({ length: Math.round(cols / 7) }, (_, i) => ({ c: Math.floor(hash(i, 7) * cols), ph: hash(i, 3) * 6 }));
             const stars = Array.from({ length: Math.round(cols * 0.5) }, (_, i) => {
                 const c = Math.floor(hash(i, 1) * cols), r = Math.floor(hash(i, 2) * (seaTop - 2));
                 return { c, r, sp: 0.001 + hash(i, 5) * 0.003, ph: hash(i, 6) * 6 };
-            }).filter(s => s.r < ridge[s.c] - 1 && Math.hypot(s.c - moon.c, s.r - moon.r) > moon.rad + 2);
+            }).filter(s => s.r < ridge[s.c] - 1 && Math.hypot(s.c - orb.c, s.r - orb.r) > orb.rad + 2);
 
-            return { cols, rows, seaTop, peakC, peakR: top, ridge, cells, moon, turbines, town, stars, cache: null };
+            return { cols, rows, seaTop, peakC, peakR: top, ridge, cells: uniq, orb, turbines, town, stars, sky, cache: null };
+        }
+
+        function applyPhaseStyle() {
+            document.body.classList.toggle('light-hero', P.light);
+            const { h, m } = nikahoNow();
+            clockBtn.querySelector('.time').textContent = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+            clockBtn.querySelector('.ph').textContent = P.label;
         }
 
         function layout() {
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
             W = hero.clientWidth; H = hero.clientHeight;
-            cv.width = W * dpr; cv.height = H * dpr;
+            cv.width = W * dpr(); cv.height = H * dpr();
             cv.style.width = W + 'px'; cv.style.height = H + 'px';
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.setTransform(dpr(), 0, 0, dpr(), 0, 0);
             const fresh = !S;
             S = buildScene();
             startScene(fresh ? !reduce : (!settled && !reduce));
@@ -897,16 +1015,24 @@
             menu.classList.toggle('on', settled);
         }
 
+        // 時計を おすと 時間が すすむ
+        const clockBtn = document.getElementById('clock');
+        clockBtn.addEventListener('click', () => {
+            phase = PHASE_ORDER[(PHASE_ORDER.indexOf(phase) + 1) % PHASE_ORDER.length];
+            P = PHASES[phase];
+            meteors = []; sparks = [];
+            applyPhaseStyle();
+            S = buildScene();
+            startScene(!reduce);
+        });
+        setInterval(applyPhaseStyle, 30000);
+
         // 着地したら 一枚の絵として とっておく（軽くするため）
         function bakeScene() {
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            const off = document.createElement('canvas');
-            off.width = W * dpr; off.height = H * dpr;
-            const o = off.getContext('2d');
-            o.setTransform(dpr, 0, 0, dpr, 0, 0);
-            const gap = 1;
-            S.cells.forEach(p => { o.fillStyle = p.color; o.fillRect(p.c * cs, p.r * cs, cs - gap, cs - gap); });
-            S.cache = off;
+            const [c, o] = offscreen();
+            if (S.sky) o.drawImage(S.sky, 0, 0, W, H);
+            S.cells.forEach(p => { o.fillStyle = p.color; o.fillRect(p.c * cs, p.r * cs, cs - 1, cs - 1); });
+            S.cache = c;
         }
 
         const dust = Array.from({ length: 40 }, () => ({
@@ -969,9 +1095,10 @@
             const t = (now - t0) / 1000;
             const gap = 1, cell = cs - gap;
             ctx.clearRect(0, 0, W, H);
+            if (!settled && S.sky) ctx.drawImage(S.sky, 0, 0, W, H);
 
             // 空の 星（チカチカ）
-            S.stars.forEach(s => {
+            if (P.stars) S.stars.forEach(s => {
                 const v = reduce ? 0.6 : Math.sin(now * s.sp + s.ph);
                 if (v < 0.1) return;
                 ctx.globalAlpha = Math.min(1, v);
@@ -982,7 +1109,7 @@
             // ただよう つぶ
             dust.forEach(d => {
                 if (!reduce) { d.y += d.v * 16; if (d.y > 1) { d.y = 0; d.x = Math.random(); } }
-                ctx.globalAlpha = d.a;
+                ctx.globalAlpha = P.light ? d.a * 0.6 : d.a;
                 ctx.fillStyle = d.col;
                 sq(d.x * W, d.y * H, d.s);
             });
@@ -1017,31 +1144,31 @@
                 if (!S.cache) bakeScene();
                 ctx.drawImage(S.cache, 0, 0, W, H);
 
-                // 海にうつる 月の道（ゆらゆら）
-                const { moon, seaTop, rows } = S;
+                // 海にうつる 月や太陽の 光の道（ゆらゆら）
+                const { orb: moon, seaTop, rows } = S;
                 for (let r = seaTop; r < rows; r++) {
                     const w = 1 + (r - seaTop) * 0.35;
                     for (let c = Math.round(moon.c - w); c <= Math.round(moon.c + w); c++) {
                         const tick = reduce ? 0 : Math.floor(now / 260);
                         if (hash(c * 3 + tick, r) < 0.55) continue;
                         ctx.globalAlpha = 0.35 + 0.5 * (1 - Math.abs(c - moon.c) / (w + 1));
-                        ctx.fillStyle = hash(c, r + tick) > 0.8 ? COL.lime : COL.cream;
+                        ctx.fillStyle = hash(c, r + tick) > 0.8 ? P.path[1] : P.path[0];
                         sq(c * cs, r * cs, cell);
                     }
                 }
                 ctx.globalAlpha = 1;
 
                 // 町のあかり
-                S.town.forEach(l => {
+                if (P.town) S.town.forEach(l => {
                     if (!reduce && Math.sin(now * 0.002 + l.ph) < -0.6) return;
-                    ctx.fillStyle = NIGHT.town;
+                    ctx.fillStyle = '#FFB347';
                     sq(l.c * cs, (seaTop - 2) * cs, cell);
                 });
 
                 // 風車（くるくる）
                 S.turbines.forEach(tb => {
                     const baseR = seaTop - 2, hubR = baseR - tb.h;
-                    ctx.fillStyle = COL.cream;
+                    ctx.fillStyle = P.turbine;
                     for (let r = hubR + 1; r <= baseR; r++) { ctx.globalAlpha = 0.75; sq(tb.c * cs, r * cs, cell); }
                     ctx.globalAlpha = 1;
                     const ang = (reduce ? 0 : now * 0.0018) + tb.ph;
@@ -1051,12 +1178,12 @@
                             sq((tb.c + Math.round(Math.cos(a) * k)) * cs, (hubR + Math.round(Math.sin(a) * k)) * cs, cell);
                         }
                     }
-                    ctx.fillStyle = Math.sin(now * 0.004 + tb.ph) > 0 ? COL.pink : COL.cream;
+                    ctx.fillStyle = Math.sin(now * 0.004 + tb.ph) > 0 ? COL.pink : P.turbine;
                     sq(tb.c * cs, hubR * cs, cell);
                 });
 
                 if (!reduce && now > nextMeteor) { spawnMeteor(); nextMeteor = now + 4000 + Math.random() * 6000; }
-                if (!reduce && now > nextShoot) { spawnShootingStar(); nextShoot = now + 2500 + Math.random() * 5000; }
+                if (!reduce && P.stars && now > nextShoot) { spawnShootingStar(); nextShoot = now + 2500 + Math.random() * 5000; }
             }
 
             // 流星
@@ -1310,6 +1437,7 @@
         /* ============================================================
            6. ぜんぶを うごかす ループ
            ============================================================ */
+        applyPhaseStyle();
         layout();
         sizeStitch();
         let resizeTimer;
