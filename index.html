@@ -137,6 +137,7 @@
             font-size: clamp(15px, 1.35vw, 19px);
             min-height: calc(2 * 1.9em + 34px);
             pointer-events: auto;
+            cursor: pointer;
         }
         .sr-only {
             position: absolute; width: 1px; height: 1px;
@@ -309,7 +310,7 @@
             padding-top: 26px;
             border-top: 2px dashed var(--ink3);
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
         }
         .st-equip h3 {
@@ -320,6 +321,7 @@
             color: var(--pink);
             margin-bottom: 6px;
         }
+        .st-equip h3 span { font-family: var(--pixel); letter-spacing: 0.05em; color: var(--mute); margin-left: 4px; }
         .st-equip ul { list-style: none; }
         .st-equip li::before { content: "・"; color: var(--mute); }
 
@@ -554,7 +556,6 @@
                     <dl class="kv">
                         <div><dt>なまえ</dt><dd>すとうえみ</dd></div>
                         <div><dt>しゅぞく</dt><dd>ちきゅうじん</dd></div>
-                        <div><dt>しょくぎょう</dt><dd>？？？ <small>（けんとうちゅう）</small></dd></div>
                         <div><dt>すみか</dt><dd>あきた・にかほ <small>（山と海のあいだ）</small></dd></div>
                         <div><dt>レベル</dt><dd>??</dd></div>
                     </dl>
@@ -568,7 +569,7 @@
                 </div>
                 <div class="st-equip">
                     <div>
-                        <h3>EQUIP</h3>
+                        <h3>EQUIP <span>そうび</span></h3>
                         <ul>
                             <li>ししゅうばり</li>
                             <li>Midjourney</li>
@@ -576,11 +577,20 @@
                         </ul>
                     </div>
                     <div>
-                        <h3>SKILL</h3>
+                        <h3>SKILL <span>とくぎ</span></h3>
                         <ul>
                             <li>ひとを あつめる（100人）</li>
                             <li>vibe coding</li>
                             <li>AIと なかよくなる</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>LIKE <span>すきなもの</span></h3>
+                        <ul>
+                            <li>鳥海山</li>
+                            <li>日本海の ゆうひ</li>
+                            <li>月ちゃんと おさんぽ</li>
+                            <li>ししゅう</li>
                         </ul>
                     </div>
                 </div>
@@ -1246,23 +1256,54 @@
             if (e.key === 'Enter' && document.activeElement === document.body) items[sel].click();
         });
 
-        // セリフのタイプライター
-        const lines = '興味あることを やっている 地球人です。\nしょくぎょうは…… まだ きまってない。';
+        // セリフのタイプライター（2行目は 開くたびに かわる）
+        const FIRST = '興味あることを やっている 地球人です。';
+        const SECOND = {
+            any: [
+                'きょうは ぬってる。あしたは つくってる。たぶん。',
+                '月ちゃんと おさんぽ してきました。',
+                '鳥海山、きょうも でっかい。',
+                'AIと しゃべってたら じかんが とけました。',
+                '山伏しゅぎょう、ついていくので せいいっぱい。',
+                'にかほから 地球を かんさつ ちゅう。',
+                'かたがきは ポケットに いっぱい 入ってます。',
+                'すきなものに すなおに いきてます。',
+                'さいきん かぜが きもちいいです。'
+            ],
+            morning: ['おはよう。月ちゃんは もう おきてる。'],
+            day: ['ひるの 鳥海山、まぶしいでしょ。'],
+            dusk: ['ゆうひ、見にいかなきゃ。'],
+            night: ['よるの 鳥海山も いいでしょ。', 'ほしが よく見える よるです。']
+        };
         const typeEl = document.getElementById('typeLine');
         const dialog = document.getElementById('dialog');
-        if (reduce) {
-            typeEl.innerHTML = lines.replace('\n', '<br>');
-            dialog.classList.add('done');
-        } else {
+        let typeTimer, lastLine = '';
+        function pickLine() {
+            const pool = [...SECOND.any, ...SECOND[phase], ...SECOND[phase]].filter(l => l !== lastLine);
+            return (lastLine = pool[Math.floor(Math.random() * pool.length)]);
+        }
+        function say2(text, delay) {
+            clearTimeout(typeTimer);
+            dialog.classList.remove('done');
+            if (reduce) {
+                typeEl.innerHTML = text.replace('\n', '<br>');
+                dialog.classList.add('done');
+                return;
+            }
             let i = 0;
             const tick = () => {
-                const ch = lines[i++];
-                typeEl.innerHTML = lines.slice(0, i).replace('\n', '<br>');
-                if (i < lines.length) setTimeout(tick, ch === '\n' ? 500 : ch === '…' ? 160 : 60);
+                const ch = text[i++];
+                typeEl.innerHTML = text.slice(0, i).replace('\n', '<br>');
+                if (i < text.length) typeTimer = setTimeout(tick, ch === '\n' ? 500 : '…。、'.includes(ch) ? 160 : 60);
                 else dialog.classList.add('done');
             };
-            setTimeout(tick, 700);
+            typeTimer = setTimeout(tick, delay);
         }
+        say2(FIRST + '\n' + pickLine(), 700);
+        // セリフ枠を おすと つぎの ひとこと
+        dialog.addEventListener('click', () => say2(FIRST + '\n' + pickLine(), 0));
+        // 時計で 時間が すすんだら、その時間の ひとことに
+        clockBtn.addEventListener('click', () => say2(FIRST + '\n' + SECOND[phase][Math.floor(Math.random() * SECOND[phase].length)], 300));
 
         /* ============================================================
            3. 刺繍カーソル（マウスのあとに 縫い目が のこる）
