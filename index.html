@@ -340,7 +340,7 @@
             padding: 18px;
             border: 2px solid var(--ink3);
         }
-        .party-sprite canvas { display: block; image-rendering: pixelated; width: 176px; height: 112px; }
+        .party-sprite canvas { display: block; image-rendering: pixelated; width: 192px; height: 112px; }
         .party .btn { grid-column: 1 / -1; justify-self: start; }
 
         /* ===== MEMO ===== */
@@ -403,12 +403,12 @@
             position: fixed;
             left: 0; bottom: 6px;
             z-index: 85;
-            width: 66px; height: 42px;
+            width: 72px; height: 42px;
             cursor: pointer;
             will-change: transform;
         }
         .tsuki.away { opacity: 0; pointer-events: none; }
-        .tsuki canvas { display: block; width: 66px; height: 42px; image-rendering: pixelated; }
+        .tsuki canvas { display: block; width: 72px; height: 42px; image-rendering: pixelated; }
         .tsuki.flip canvas { transform: scaleX(-1); }
         .tsuki.hop canvas { animation: hop 0.35s steps(4); }
         .tsuki .bubble {
@@ -630,9 +630,10 @@
                 <div class="party-sprite"><canvas id="tsukiBig" aria-hidden="true"></canvas></div>
                 <dl class="kv">
                     <div><dt>なまえ</dt><dd>月ちゃん</dd></div>
-                    <div><dt>しゅぞく</dt><dd>いぬ <small>（おおかみ の血 つよめ）</small></dd></div>
+                    <div><dt>しゅぞく</dt><dd>いぬ <small>（しろくて ふわふわ。おおかみ の血 つよめ）</small></dd></div>
                     <div><dt>うまれ</dt><dd>2020</dd></div>
-                    <div><dt>そうび</dt><dd>オレンジの レインコート</dd></div>
+                    <div><dt>そうび</dt><dd>あかい リード</dd></div>
+                    <div><dt>とくちょう</dt><dd>はなの そばかす・まきまき しっぽ</dd></div>
                     <div><dt>とくぎ</dt><dd>まいにち おさんぽ</dd></div>
                     <div><dt>かんけい</dt><dd>えみの あいぼう</dd></div>
                 </dl>
@@ -699,7 +700,7 @@
     <canvas id="stitch" aria-hidden="true"></canvas>
     <div class="tsuki" id="tsuki" role="button" tabindex="0" aria-label="月ちゃん">
         <div class="bubble" id="tsukiBubble"></div>
-        <canvas width="22" height="14"></canvas>
+        <canvas width="24" height="14"></canvas>
     </div>
     <div class="toast" id="toast" role="status"></div>
 
@@ -1167,31 +1168,35 @@
         }
 
         /* ============================================================
-           4. 月ちゃん（ドット絵・オレンジのレインコート）
+           4. 月ちゃん（ドット絵・白いふわふわ）
            ============================================================ */
-        const TSUKI_PAL = { k: '#2B2433', g: '#8F8A96', w: '#E9E2D6', e: '#14111C', n: '#14111C', o: '#FF8A1F', O: '#CC5F00' };
+        // 白くて ふわふわ、耳は茶色、おでこに白いすじ、鼻に そばかす、くるんと巻いた しっぽ
+        const TSUKI_PAL = {
+            k: '#3A2E2A', W: '#F7F2E8', s: '#D6CCBE', o: '#E07A2E', O: '#B4561C',
+            e: '#14111C', n: '#14111C', f: '#C9733A', r: '#E8343A'
+        };
         const BODY = [
-            '................k..k..',
-            '...............kgkkgk.',
-            '...............kggggk.',
-            '..............kggggegk',
-            '.k............kgggwwwk',
-            'kgk...........kggwwwwn',
-            '.kgk.........kgggwwkk.',
-            '..kgkkkkkkkkkkkoogk...',
-            '...koooooooooooooook..',
-            '...kooooooooooooooOk..',
-            '...kOOOOOOOOOOOOOOOk..'
+            '................k..k....',
+            '...............kokkok...',
+            '..kkk.........kooWoook..',
+            '.kWWWk........koWWWeok..',
+            'kWWsWWk.......kWWWWWfWWn',
+            'kWsWWWk......kWWWWWWWkk.',
+            '.kWWWWk....krWWWWWWk....',
+            '..kWWWkkkkkWWWWWWWWk....',
+            '...kWWWWooWWWWWWWWk.....',
+            '...kWWWooWWWWWWWWsk.....',
+            '...ksWWWWWWWWWWWssk.....'
         ];
         const FRAMES = {
             a: [...BODY,
-                '...kgk.kgk...kgk.kgk..',
-                '...kgk.kgk...kgk.kgk..',
-                '...kk..kk....kk..kk...'],
+                '....kWk.kWk...kWk.kWk...',
+                '....kWk.kWk...kWk.kWk...',
+                '....kk..kk....kk..kk....'],
             b: [...BODY,
-                '....kgk.kgk.kgk.kgk...',
-                '...kgk...kgkkgk...kgk.',
-                '..kk......kkkk.....kk.'],
+                '.....kWk.kWk.kWk.kWk....',
+                '....kWk...kWkkWk...kWk..',
+                '...kk......kkkk.....kk..'],
             sleep: ['', '', '', ...BODY.map(r => r.replace('e', 'k'))]
         };
         function paint(c, rows) {
@@ -1205,7 +1210,7 @@
         const dog = document.getElementById('tsuki');
         const dogCv = dog.querySelector('canvas');
         const bubble = document.getElementById('tsukiBubble');
-        const DOG_W = 66;
+        const DOG_W = 72;
         const D = { x: 20, target: 20, dir: 1, frame: 'a', lastFrame: 0, lastMove: performance.now(), state: '' };
         paint(dogCv, FRAMES.a);
 
@@ -1265,7 +1270,7 @@
 
         // なかまの画面の 大きい月ちゃん
         const big = document.getElementById('tsukiBig');
-        big.width = 22; big.height = 14;
+        big.width = 24; big.height = 14;
         paint(big, FRAMES.a);
         if (!reduce) {
             let f = 'a';
