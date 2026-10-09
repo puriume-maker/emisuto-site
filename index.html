@@ -882,11 +882,10 @@
             const cols = Math.ceil(W / cs), rows = Math.ceil(H / cs);
             const seaTop = Math.round(rows * 0.8);
             const textRow = mobile ? Math.ceil((heroText.getBoundingClientRect().bottom - hero.getBoundingClientRect().top) / cs) : 0;
-            const peakC = Math.round(cols * (mobile ? 0.5 : 0.62));
-            const peakR = Math.round(mobile ? Math.max(textRow + 12, rows * 0.56) : rows * 0.42);
+            let peakC;
+            const peakR = Math.round(mobile ? Math.max(textRow + 12, rows * 0.56) : rows * 0.5);
             const peakH = seaTop - peakR;
-            const spread = cols * (mobile ? 0.34 : 0.17);
-
+            
             // 空（ディザで にじませた グラデーション）
             let sky = null;
             if (P.sky) {
@@ -902,22 +901,29 @@
                 sky = c;
             }
 
-            // 鳥海山の 稜線（すそ野がひろくて、てっぺんは ちょっと たいら）
+            // 鳥海山の 稜線（にかほから見た かたち）
+            // 左寄りに とがった頂上 → 右へ ながーく なだらかな尾根 → 右はしに まるい こぶ
+            const RIDGE = [
+                [0, 0], [0.1, 0.18], [0.22, 0.45], [0.3, 0.78], [0.36, 1], [0.39, 0.93],
+                [0.44, 0.88], [0.5, 0.8], [0.56, 0.75], [0.62, 0.77], [0.7, 0.73],
+                [0.78, 0.75], [0.86, 0.63], [0.94, 0.42], [1, 0.28], [1.2, 0.1]
+            ];
+            const mL = W * (mobile ? -0.08 : 0.3), mW = W * (mobile ? 1.55 : 0.7);
+            const shape = u => {
+                if (u <= 0 || u >= 1.2) return 0;
+                for (let i = 1; i < RIDGE.length; i++) {
+                    const [x1, y1] = RIDGE[i], [x0, y0] = RIDGE[i - 1];
+                    if (u <= x1) return y0 + (y1 - y0) * (u - x0) / (x1 - x0);
+                }
+                return 0;
+            };
             const ridge = [];
             for (let c = 0; c < cols; c++) {
-                // 西（左・海がわ）は ながーい すそ野、東は すこし 急
-                const sp = c < peakC ? spread * 1.35 : spread * 1.05;
-                const dx = Math.max(0, Math.abs(c - peakC) / sp - 0.2);
-                let h = peakH / (1 + Math.pow(dx * 1.6, 1.25));
-                const bump = (at, w, k) => peakH * k * Math.exp(-(((c - at) / w) ** 2));
-                h += bump(peakC - sp * 0.3, sp * 0.14, 0.04);   // 七高山のこぶ
-                h += bump(peakC + sp * 0.12, sp * 0.06, 0.05);   // 新山のとんがり
-                h += bump(peakC + sp * 0.62, sp * 0.12, 0.05);   // 東の肩
-                h -= bump(peakC - sp * 0.1, sp * 0.06, 0.05);    // 火口の くぼみ
-                h += (Math.sin(c * 0.9) * 0.7 + Math.sin(c * 0.37) * 1.1 + Math.sin(c * 1.7) * 0.4) * (0.3 + h / peakH);
-                h = Math.max(0, h - peakH * 0.15);   // はしっこは 海まで ひらける
-                ridge.push(Math.round(seaTop - h));
+                let h = peakH * shape((c * cs - mL) / mW);
+                if (h > 0) h += Math.sin(c * 0.9) * 0.35 + Math.sin(c * 0.37) * 0.5;
+                ridge.push(Math.round(seaTop - Math.max(0, h)));
             }
+            peakC = Math.round((mL + mW * 0.36) / cs);
             const top = Math.min(...ridge);
 
             const cells = [];
@@ -930,7 +936,8 @@
             } else if (phase === 'dusk') {
                 orb = { c: Math.round(cols * (mobile ? 0.14 : 0.2)), r: seaTop - 1, rad: mobile ? 7 : 10 };
             } else if (phase === 'morning') {
-                orb = { c: Math.round(cols * (mobile ? 0.82 : 0.9)), r: Math.round(seaTop - peakH * 0.55), rad: mobile ? 4.5 : 6 };
+                const sc = Math.round(cols * (mobile ? 0.8 : 0.88));
+                orb = { c: sc, r: ridge[sc] - 1, rad: mobile ? 5 : 7 };   // 尾根から ひょっこり
             } else {
                 orb = { c: Math.round(cols * (mobile ? 0.8 : 0.86)), r: Math.round(mobile ? textRow + 7 : rows * 0.15), rad: mobile ? 4.5 : 6 };
             }
@@ -954,8 +961,11 @@
                     let color;
                     if (r === ridge[c]) color = P.rim;
                     else {
-                        const snowT = (r - top) / (peakH * 0.35);
-                        const lightT = 0.5 + (c - peakC) / spread * 0.35 - (r - ridge[c]) * 0.02;
+                        // 雪は 尾根に そって、すじ状に のこる
+                        const local = seaTop - ridge[c];
+                        const snowDepth = local * (0.42 + 0.16 * Math.sin(c * 0.55) + 0.08 * Math.sin(c * 1.9)) * Math.min(1, local / (peakH * 0.5));
+                        const snowT = (r - ridge[c]) / Math.max(1, snowDepth);
+                        const lightT = 0.45 + (c - peakC) / cols * 0.8 - (r - ridge[c]) * 0.02;
                         if (snowT * 16 < 16 - b) color = c > peakC ? P.snow : P.snowS;
                         else color = lightT * 16 > b ? P.mtnL : P.mtn;
                     }
