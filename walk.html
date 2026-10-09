@@ -402,9 +402,9 @@
         try { best = +localStorage.getItem('tsuki-walk-best') || 0; } catch (e) { /* なくても だいじょうぶ */ }
 
         function reset() {
-            dist = 0; speed = 2; treats = 0;
+            dist = 0; speed = 1.25; treats = 0;
             objs = []; treatsArr = []; parts = [];
-            nextObs = 160; nextTreat = 90; frameT = 0; milestone = 0;
+            nextObs = 220; nextTreat = 90; frameT = 0; milestone = 0;
             dog = { y: GROUND - 14, vy: 0, onGround: true, holding: false };
             updateScore();
         }
@@ -487,14 +487,14 @@
             const m = dist / 10;
             const r = Math.random();
             let type;
-            if (m > 120 && r < 0.22) type = 'gull';
+            if (m > 150 && r < 0.2) type = 'gull';
             else if (r < 0.5) type = 'rock';
             else if (r < 0.75) type = 'crab';
             else type = 'wood';
             const { w, h } = SIZE(type);
             const y = type === 'gull' ? GROUND - 27 : GROUND - h;
             objs.push({ type, x: LW + 8, y, w, h, ph: Math.random() * 6 });
-            nextObs = dist + 46 * speed + 30 + Math.random() * 150;
+            nextObs = dist + 55 * speed + 50 + Math.random() * 140;
         }
         function spawnTreat() {
             const high = Math.random() < 0.6;
@@ -509,7 +509,7 @@
                 dist += 0.6 * k;   // タイトル中も けしきは ゆっくり ながれる
                 return;
             }
-            speed = Math.min(4.6, speed + 0.0009 * k);
+            speed = Math.min(3.2, speed + 0.00035 * k);   // とことこ → ちょっと はやあし くらいまで
             dist += speed * k;
 
             // 月ちゃんの ジャンプ
@@ -525,7 +525,7 @@
             if (dist >= nextObs) spawn();
             if (dist >= nextTreat) spawnTreat();
 
-            const box = { x: DOG_X + 5, y: dog.y + 3, w: 16, h: 10 };
+            const box = { x: DOG_X + 6, y: dog.y + 4, w: 14, h: 9 };   // あたり判定は ちょっと あまめ
             objs.forEach(o => {
                 o.x -= (speed + (o.type === 'gull' ? 0.7 : o.type === 'crab' ? 0.3 : 0)) * k;
                 if (o.type === 'gull') o.y = GROUND - 27 + Math.round(Math.sin(frameT * 0.12 + o.ph) * 1.5);
@@ -629,7 +629,7 @@
             let frame;
             if (state === 'over') frame = FRAMES.sleep;
             else if (!dog.onGround) frame = FRAMES.jump;
-            else frame = Math.floor(frameT / (state === 'play' ? 5 : 9)) % 2 ? FRAMES.a : FRAMES.b;
+            else frame = Math.floor(frameT / (state === 'play' ? Math.max(4, 11 - speed * 2) : 9)) % 2 ? FRAMES.a : FRAMES.b;
             drawTsuki(ctx, frame, DOG_X, Math.round(dog.y));
             if (state === 'over') {
                 ctx.fillStyle = '#F3ECDD';
