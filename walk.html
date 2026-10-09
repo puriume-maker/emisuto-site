@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>月ちゃんの おさんぽ — すとうえみ</title>
+    <meta name="description" content="にかほの浜を 月ちゃんと おさんぽする ドットゲーム。">
+    <meta property="og:title" content="月ちゃんの おさんぽ — すとうえみ">
+    <meta property="og:description" content="にかほの浜を 月ちゃんと おさんぽする ドットゲーム。">
+    <meta property="og:image" content="https://emisuto.com/ogp.png">
+    <meta property="og:url" content="https://emisuto.com/walk.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #14111C;
+            --ink2: #1E1A29;
+            --ink3: #2B2538;
+            --cream: #F3ECDD;
+            --mute: #9A93A8;
+            --pink: #FF5FA2;
+            --lime: #D4FF3A;
+            --pixel: 'DotGothic16', monospace;
+            --bit: 'Silkscreen', monospace;
+            --grot: 'Space Grotesk', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: var(--ink); overflow-x: clip; }
+        body {
+            color: var(--cream);
+            font-family: var(--pixel);
+            line-height: 1.9;
+            letter-spacing: 0.04em;
+            min-height: 100vh;
+        }
+        a { color: inherit; }
+        ::selection { background: var(--pink); color: var(--ink); }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            font-family: var(--bit);
+            font-size: 13px;
+            letter-spacing: 0.12em;
+        }
+        .hud a { text-decoration: none; font-weight: 700; }
+        .hud .back { font-family: var(--pixel); letter-spacing: 0.05em; color: var(--mute); }
+        .hud .back:hover { color: var(--lime); }
+
+        main { max-width: 1100px; margin: 0 auto; padding: 8px 20px 60px; }
+        h1 {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 4px 16px;
+            margin: 10px 0 22px;
+            font-weight: 400;
+        }
+        h1 .en {
+            font-family: var(--grot);
+            font-weight: 700;
+            font-size: clamp(36px, 7vw, 64px);
+            line-height: 1;
+            letter-spacing: -0.02em;
+            color: transparent;
+            -webkit-text-stroke: 1.5px var(--cream);
+        }
+        h1 .ja { font-size: 18px; color: var(--lime); }
+
+        .stage {
+            position: relative;
+            height: min(68vh, 560px);
+            min-height: 300px;
+            border: 3px solid var(--cream);
+            box-shadow: 8px 8px 0 var(--pink);
+            overflow: hidden;
+            background: var(--ink2);
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: pointer;
+        }
+        #game {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        .score {
+            position: absolute;
+            left: 14px; top: 10px;
+            display: flex;
+            gap: 18px;
+            font-size: 15px;
+            color: var(--ink);
+            background: rgba(243, 236, 221, 0.88);
+            border: 2px solid var(--ink);
+            padding: 2px 12px;
+            pointer-events: none;
+        }
+        .score b { font-weight: 400; color: #C2306F; }
+        .score .best { opacity: 0.6; }
+
+        .panel {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            width: min(88%, 420px);
+            padding: 22px 26px 24px;
+            background: rgba(20, 17, 28, 0.94);
+            border: 3px solid var(--cream);
+            box-shadow: 6px 6px 0 var(--lime);
+            text-align: center;
+            cursor: default;
+        }
+        .panel[hidden] { display: none; }
+        .panel h2 { font-weight: 400; font-size: 22px; margin-bottom: 6px; }
+        .panel p { font-size: 14px; color: var(--mute); }
+        .panel .stats { margin: 12px 0 4px; font-size: 16px; color: var(--cream); }
+        .panel .stats b { font-weight: 400; color: var(--lime); }
+        .panel .new { color: var(--pink); font-family: var(--bit); font-size: 12px; letter-spacing: 0.15em; animation: blink 0.8s steps(1) infinite; }
+        .btns { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+        .btn {
+            display: inline-block;
+            padding: 8px 18px;
+            font: inherit;
+            font-size: 15px;
+            color: var(--ink);
+            background: var(--lime);
+            border: 2px solid var(--ink);
+            box-shadow: 4px 4px 0 var(--cream);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--pink); }
+        .btn.alt { background: var(--ink2); color: var(--cream); border-color: var(--cream); box-shadow: 4px 4px 0 var(--ink3); }
+
+        .pop {
+            position: absolute;
+            left: 50%; top: 22%;
+            transform: translateX(-50%);
+            padding: 4px 14px;
+            font-size: 16px;
+            color: var(--ink);
+            background: var(--lime);
+            border: 2px solid var(--ink);
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+            transition: opacity 0.2s steps(2);
+        }
+        .pop.on { opacity: 1; }
+
+        .howto {
+            margin-top: 34px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            list-style: none;
+        }
+        .howto li {
+            padding: 14px 16px;
+            background: var(--ink2);
+            border: 2px solid var(--ink3);
+            font-size: 14px;
+        }
+        .howto li b { display: block; font-weight: 400; color: var(--lime); font-size: 15px; }
+        .howto kbd {
+            font-family: var(--bit);
+            font-size: 11px;
+            padding: 1px 6px;
+            border: 1px solid var(--mute);
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        @media (max-width: 640px) {
+            .hud { padding: 12px 16px; font-size: 11px; }
+            main { padding: 4px 14px 50px; }
+            .stage { height: auto; min-height: 0; aspect-ratio: 5 / 4; box-shadow: 5px 5px 0 var(--pink); }
+            .panel { padding: 14px 14px 16px; }
+            .panel h2 { font-size: 18px; }
+            .btns { margin-top: 10px; }
+            .score { font-size: 13px; gap: 12px; left: 8px; top: 8px; padding: 1px 8px; }
+            .score .best { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="hud">
+        <a href="./">EMI SUTO</a>
+        <a href="./#party" class="back">← もどる</a>
+    </header>
+
+    <main>
+        <h1><span class="en">TSUKI WALK</span><span class="ja">月ちゃんの おさんぽ</span></h1>
+
+        <div class="stage" id="stage">
+            <canvas id="game" aria-label="月ちゃんが にかほの浜を はしる ゲーム画面"></canvas>
+            <div class="score" aria-live="off">
+                <span>きょり <b id="dist">0</b>m</span>
+                <span>おやつ <b id="treats">0</b></span>
+                <span class="best">ベスト <b id="best">0</b>m</span>
+            </div>
+            <div class="pop" id="pop"></div>
+
+            <div class="panel" id="titlePanel">
+                <h2>おさんぽ いく？</h2>
+                <p>にかほの浜を いっしょに あるこう</p>
+                <div class="btns">
+                    <button class="btn" id="startBtn" type="button">▶ はい</button>
+                    <a class="btn alt" href="./#party">いいえ</a>
+                </div>
+            </div>
+
+            <div class="panel" id="overPanel" hidden>
+                <h2 id="overMsg">つかれた〜</h2>
+                <p class="new" id="newBest" hidden>NEW RECORD!</p>
+                <div class="stats">きょり <b id="overDist">0</b>m ・ おやつ <b id="overTreats">0</b>こ</div>
+                <p>ベスト <span id="overBest">0</span>m</p>
+                <div class="btns">
+                    <button class="btn" id="againBtn" type="button">▶ もういっかい</button>
+                    <a class="btn alt" href="./#party">もどる</a>
+                </div>
+            </div>
+        </div>
+
+        <ul class="howto">
+            <li><b>ジャンプ</b><kbd>SPACE</kbd> か 画面を タップ。ながおし で たかく とぶ。</li>
+            <li><b>よける</b>岩・カニ・流木は とびこえよう。</li>
+            <li><b>くぐる</b>カモメは とばずに 下を とおろう。</li>
+            <li><b>あつめる</b>ほね（おやつ）を ひろうと 月ちゃんが よろこぶ。</li>
+        </ul>
+    </main>
+
+    <script src="tsuki-sprite.js"></script>
+    <script>
+    (() => {
+        const { FRAMES, draw: drawTsuki } = window.TSUKI;
+        const stage = document.getElementById('stage');
+        const cv = document.getElementById('game');
+        const ctx = cv.getContext('2d');
+
+        /* ============================================================
+           にかほの 時間帯（トップページと おなじ きまり）
+           ============================================================ */
+        const PAL = {
+            morning: { sky: ['#9CC2EA', '#F3D3D0', '#F8E3C4'], mtn: '#5E6FB0', mtnD: '#4D5D9C', snow: '#FFFFFF', sea: '#5E86BE', seaL: '#9DBBE0', sand: '#E8D6B0', sandD: '#CDB68C', turbine: '#FFFFFF', orb: 'sun', sun: '#FFF1C9' },
+            day:     { sky: ['#5FB2EE', '#9CD2F5', '#DDF1FB'], mtn: '#3E7468', mtnD: '#33635A', snow: '#FFFFFF', sea: '#2F7FC0', seaL: '#7FC0EA', sand: '#EAD9A8', sandD: '#D1BC85', turbine: '#FFFFFF', orb: 'sun', sun: '#FFFDF0' },
+            dusk:    { sky: ['#8F9AB0', '#EFC883', '#F5A04A', '#EE6A3A'], mtn: '#3A2B52', mtnD: '#2E2244', snow: '#F7C9A6', sea: '#5B5873', seaL: '#FFC266', sand: '#9C6E5A', sandD: '#7A5246', turbine: '#2A2036', orb: 'sun', sun: '#FFE9A8' },
+            night:   { sky: ['#14111C', '#1B1838', '#24215A'], mtn: '#2A2766', mtnD: '#221F57', snow: '#B9B4D6', sea: '#16132A', seaL: '#4347A8', sand: '#3A3350', sandD: '#2B2540', turbine: '#F3ECDD', orb: 'moon', stars: true }
+        };
+        function nikahoHour() {
+            const h = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', hour12: false }).format(new Date());
+            return +h % 24;
+        }
+        const hr = nikahoHour();
+        const phase = hr >= 5 && hr < 9 ? 'morning' : hr >= 9 && hr < 16 ? 'day' : hr >= 16 && hr < 19 ? 'dusk' : 'night';
+        const P = PAL[phase];
+
+        /* ============================================================
+           画面サイズ（ゲームの中は 高さ180ドット）
+           ============================================================ */
+        const LH = 180, HORIZON = 112, SHORE = 142, GROUND = 152;
+        let LW = 320;
+        const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+        const hash = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
+        let skyCv, mtnCv;
+        const MTN_TILE = 420;
+
+        function buildBackground() {
+            // 空
+            skyCv = document.createElement('canvas');
+            skyCv.width = LW; skyCv.height = HORIZON;
+            const s = skyCv.getContext('2d');
+            const n = P.sky.length - 1;
+            for (let y = 0; y < HORIZON; y++) {
+                const t = (y / HORIZON) * n, i = Math.min(n - 1, Math.floor(t)), u = t - i;
+                for (let x = 0; x < LW; x++) {
+                    s.fillStyle = u * 16 > BAYER[(y >> 1) % 4][(x >> 1) % 4] + 0.5 ? P.sky[i + 1] : P.sky[i];
+                    s.fillRect(x, y, 1, 1);
+                }
+            }
+            // 鳥海山（にかほから見た かたち）を 1まい
+            const RIDGE = [[0, 0], [0.1, 0.18], [0.22, 0.45], [0.3, 0.78], [0.36, 1], [0.39, 0.93], [0.44, 0.88], [0.5, 0.8],
+                [0.56, 0.75], [0.62, 0.77], [0.7, 0.73], [0.78, 0.75], [0.86, 0.63], [0.94, 0.42], [1, 0.28], [1.15, 0]];
+            const shape = u => {
+                if (u <= 0 || u >= 1.15) return 0;
+                for (let i = 1; i < RIDGE.length; i++) {
+                    const [x1, y1] = RIDGE[i], [x0, y0] = RIDGE[i - 1];
+                    if (u <= x1) return y0 + (y1 - y0) * (u - x0) / (x1 - x0);
+                }
+                return 0;
+            };
+            mtnCv = document.createElement('canvas');
+            mtnCv.width = MTN_TILE; mtnCv.height = HORIZON;
+            const m = mtnCv.getContext('2d');
+            const MW = 340, MH = 52;
+            for (let x = 0; x < MTN_TILE; x++) {
+                const h = Math.round(MH * shape(x / MW));
+                if (h <= 0) continue;
+                const top = HORIZON - h;
+                for (let y = top; y < HORIZON; y++) {
+                    const depth = y - top;
+                    const snowDepth = h * (0.4 + 0.15 * Math.sin(x * 0.3) + 0.08 * Math.sin(x * 1.3));
+                    const b = BAYER[y % 4][x % 4];
+                    let c = (x + y) % 3 === 0 && depth > 4 ? P.mtnD : P.mtn;
+                    if (depth / snowDepth * 16 < 16 - b) c = P.snow;
+                    m.fillStyle = c;
+                    m.fillRect(x, y, 1, 1);
+                }
+            }
+        }
+
+        function resize() {
+            const w = stage.clientWidth, h = stage.clientHeight;
+            const scale = h / LH;
+            LW = Math.max(200, Math.round(w / scale));
+            cv.width = LW; cv.height = LH;
+            ctx.imageSmoothingEnabled = false;
+            buildBackground();
+        }
+
+        /* ============================================================
+           ドット絵の 部品
+           ============================================================ */
+        const SPR = {
+            rock: { pal: { k: '#2B2433', g: '#6E6A7A', w: '#A29EAE' }, rows: [
+                '...kkkk...',
+                '..kgwwgk..',
+                '.kgwggggk.',
+                'kggggggggk',
+                'kgggggwggk',
+                'kggggggggk',
+                'kkkkkkkkkk'] },
+            crab: { pal: { r: '#E8343A', d: '#9E1F2A', e: '#14111C' }, rows: [
+                'e.......e',
+                'r.e...e.r',
+                '.rrrrrrr.',
+                'rrdrrrdrr',
+                '.r.r.r.r.',
+                'r.r...r.r'] },
+            crab2: { pal: { r: '#E8343A', d: '#9E1F2A', e: '#14111C' }, rows: [
+                '.e.....e.',
+                'r.e...e.r',
+                '.rrrrrrr.',
+                'rrdrrrdrr',
+                'r.r.r.r.r',
+                '.r.r.r.r.'] },
+            wood: { pal: { o: '#8A5A3C', O: '#5E3B26' }, rows: [
+                '..oooooooooooo..',
+                '.oOooooOoooooOo.',
+                'oooooOoooooooooo',
+                '.oOoooooooOoooo.',
+                '..oooooooooooo..'] },
+            gull: { pal: { k: '#3A3346', w: '#F7F2E8', g: '#9A93A8', y: '#F5B83D' }, rows: [
+                'g.........g',
+                'gk.......kg',
+                '.gk.www.kg.',
+                '..kwwwwwky.',
+                '...kwwwk...',
+                '....kkk....'] },
+            gull2: { pal: { k: '#3A3346', w: '#F7F2E8', g: '#9A93A8', y: '#F5B83D' }, rows: [
+                '...........',
+                '....www....',
+                '..kwwwwwky.',
+                '.gkwwwwwk..',
+                'gk.......kg',
+                'g.........g'] },
+            bone: { pal: { k: '#3A2E2A', w: '#F7F2E8' }, rows: [
+                '.kk...kk.',
+                'kwwkkkwwk',
+                'kwwwwwwwk',
+                'kwwwwwwwk',
+                'kwwkkkwwk',
+                '.kk...kk.'] }
+        };
+        function sprite(name, x, y) {
+            const s = SPR[name];
+            s.rows.forEach((row, r) => [...row].forEach((ch, i) => {
+                const c = s.pal[ch];
+                if (c) { ctx.fillStyle = c; ctx.fillRect(Math.round(x) + i, Math.round(y) + r, 1, 1); }
+            }));
+        }
+        const SIZE = name => ({ w: SPR[name].rows[0].length, h: SPR[name].rows.length });
+
+        /* ============================================================
+           ゲームの じょうたい
+           ============================================================ */
+        const DOG_X = 34;
+        let state = 'title';
+        let dist, speed, treats, objs, treatsArr, parts, nextObs, nextTreat, frameT, dog, milestone;
+        let best = 0;
+        try { best = +localStorage.getItem('tsuki-walk-best') || 0; } catch (e) { /* なくても だいじょうぶ */ }
+
+        function reset() {
+            dist = 0; speed = 2; treats = 0;
+            objs = []; treatsArr = []; parts = [];
+            nextObs = 160; nextTreat = 90; frameT = 0; milestone = 0;
+            dog = { y: GROUND - 14, vy: 0, onGround: true, holding: false };
+            updateScore();
+        }
+
+        const $ = id => document.getElementById(id);
+        function updateScore() {
+            $('dist').textContent = Math.floor(dist / 10);
+            $('treats').textContent = treats;
+            $('best').textContent = best;
+        }
+
+        let popTimer;
+        function pop(text) {
+            const el = $('pop');
+            el.textContent = text;
+            el.classList.add('on');
+            clearTimeout(popTimer);
+            popTimer = setTimeout(() => el.classList.remove('on'), 1300);
+        }
+
+        function start() {
+            reset();
+            state = 'play';
+            $('titlePanel').hidden = true;
+            $('overPanel').hidden = true;
+            stage.focus && stage.focus();
+        }
+
+        const OVER_MSG = ['つかれた〜', 'もう かえる？', 'ちょっと ひとやすみ', 'おやつ たりない……', 'Zzz……'];
+        function gameOver() {
+            state = 'over';
+            const m = Math.floor(dist / 10);
+            const isBest = m > best;
+            if (isBest) {
+                best = m;
+                try { localStorage.setItem('tsuki-walk-best', String(best)); } catch (e) { /* ほぞん できなくても あそべる */ }
+            }
+            $('overMsg').textContent = OVER_MSG[Math.floor(Math.random() * OVER_MSG.length)];
+            $('newBest').hidden = !isBest;
+            $('overDist').textContent = m;
+            $('overTreats').textContent = treats;
+            $('overBest').textContent = best;
+            $('overPanel').hidden = false;
+            updateScore();
+        }
+
+        /* ============================================================
+           そうさ（スペース / タップ）
+           ============================================================ */
+        function press() {
+            if (state === 'title' || state === 'over') return;
+            if (dog.onGround) {
+                dog.vy = -4.3;
+                dog.onGround = false;
+                dog.holding = true;
+            }
+        }
+        function release() {
+            dog.holding = false;
+            if (dog.vy < -1.8) dog.vy = -1.8;   // みじかく おすと ひくい ジャンプ
+        }
+        window.addEventListener('keydown', e => {
+            if (![' ', 'ArrowUp', 'w', 'W', 'Enter'].includes(e.key)) return;
+            if (e.target.closest && e.target.closest('a, button') && e.key === 'Enter') return;
+            e.preventDefault();
+            if (e.repeat) return;
+            if (state === 'title' || state === 'over') { start(); return; }
+            press();
+        });
+        window.addEventListener('keyup', e => { if ([' ', 'ArrowUp', 'w', 'W'].includes(e.key) && dog) release(); });
+        cv.addEventListener('pointerdown', e => { e.preventDefault(); if (state === 'play') press(); else if (state === 'title') start(); });
+        window.addEventListener('pointerup', () => { if (state === 'play') release(); });
+        $('startBtn').addEventListener('click', start);
+        $('againBtn').addEventListener('click', start);
+
+        /* ============================================================
+           うごかす
+           ============================================================ */
+        function spawn() {
+            const m = dist / 10;
+            const r = Math.random();
+            let type;
+            if (m > 120 && r < 0.22) type = 'gull';
+            else if (r < 0.5) type = 'rock';
+            else if (r < 0.75) type = 'crab';
+            else type = 'wood';
+            const { w, h } = SIZE(type);
+            const y = type === 'gull' ? GROUND - 27 : GROUND - h;
+            objs.push({ type, x: LW + 8, y, w, h, ph: Math.random() * 6 });
+            nextObs = dist + 46 * speed + 30 + Math.random() * 150;
+        }
+        function spawnTreat() {
+            const high = Math.random() < 0.6;
+            treatsArr.push({ x: LW + 8, y: high ? GROUND - 24 - Math.random() * 18 : GROUND - 9, got: false });
+            nextTreat = dist + 120 + Math.random() * 180;
+        }
+        const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+        function update(k) {
+            frameT += k;
+            if (state !== 'play') {
+                dist += 0.6 * k;   // タイトル中も けしきは ゆっくり ながれる
+                return;
+            }
+            speed = Math.min(4.6, speed + 0.0009 * k);
+            dist += speed * k;
+
+            // 月ちゃんの ジャンプ
+            if (!dog.onGround) {
+                dog.vy += (dog.holding && dog.vy < 0 ? 0.2 : 0.3) * k;
+                dog.y += dog.vy * k;
+                if (dog.y >= GROUND - 14) {
+                    dog.y = GROUND - 14; dog.vy = 0; dog.onGround = true;
+                    for (let i = 0; i < 5; i++) parts.push({ x: DOG_X + 6 + Math.random() * 12, y: GROUND - 1, vx: -1 - Math.random(), vy: -Math.random() * 1.2, life: 1, c: P.sandD });
+                }
+            }
+
+            if (dist >= nextObs) spawn();
+            if (dist >= nextTreat) spawnTreat();
+
+            const box = { x: DOG_X + 5, y: dog.y + 3, w: 16, h: 10 };
+            objs.forEach(o => {
+                o.x -= (speed + (o.type === 'gull' ? 0.7 : o.type === 'crab' ? 0.3 : 0)) * k;
+                if (o.type === 'gull') o.y = GROUND - 27 + Math.round(Math.sin(frameT * 0.12 + o.ph) * 1.5);
+                if (hit(box, { x: o.x + 1, y: o.y + 1, w: o.w - 2, h: o.h - 1 })) gameOver();
+            });
+            objs = objs.filter(o => o.x > -20);
+
+            treatsArr.forEach(t => {
+                t.x -= speed * k;
+                if (!t.got && hit(box, { x: t.x, y: t.y, w: 9, h: 6 })) {
+                    t.got = true; treats++;
+                    for (let i = 0; i < 8; i++) {
+                        const a = Math.random() * Math.PI * 2;
+                        parts.push({ x: t.x + 4, y: t.y + 3, vx: Math.cos(a) * 1.4, vy: Math.sin(a) * 1.4, life: 1, c: '#D4FF3A' });
+                    }
+                    if (treats % 10 === 0) pop(`おやつ ${treats}こ！ しっぽ ぶんぶん`);
+                }
+            });
+            treatsArr = treatsArr.filter(t => t.x > -12 && !t.got);
+
+            const m = Math.floor(dist / 10);
+            const MILESTONES = [[100, '100m！ いいペース'], [250, '250m！ 鳥海山が ついてくる'], [500, '500m！ たいりょく だいじょうぶ？'], [1000, '1000m！ えいえんの おさんぽ']];
+            MILESTONES.forEach(([at, text]) => { if (m >= at && milestone < at) { milestone = at; pop(text); } });
+            updateScore();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, LW, LH);
+            ctx.drawImage(skyCv, 0, 0);
+
+            // 星・月・太陽
+            if (P.stars) {
+                for (let i = 0; i < 40; i++) {
+                    const x = Math.floor(hash(i, 1) * LW), y = Math.floor(hash(i, 2) * 80);
+                    if (Math.sin(frameT * 0.05 + i) > -0.3) { ctx.fillStyle = '#F3ECDD'; ctx.fillRect(x, y, 1, 1); }
+                }
+            }
+            if (P.orb === 'moon') {
+                ctx.fillStyle = '#F3ECDD';
+                for (let y = -6; y <= 6; y++) for (let x = -6; x <= 6; x++) if (x * x + y * y <= 30) ctx.fillRect(LW * 0.8 + x, 26 + y, 1, 1);
+            } else {
+                const sy = phase === 'dusk' ? HORIZON - 3 : phase === 'morning' ? 40 : 22;
+                ctx.fillStyle = P.sun;
+                for (let y = -8; y <= 8; y++) for (let x = -8; x <= 8; x++) if (x * x + y * y <= 60 && sy + y < HORIZON) ctx.fillRect(Math.round(LW * 0.72) + x, sy + y, 1, 1);
+            }
+
+            // 鳥海山（ゆっくり ながれる）
+            const mOff = -((dist * 0.06) % MTN_TILE);
+            for (let x = mOff - MTN_TILE; x < LW; x += MTN_TILE) ctx.drawImage(mtnCv, Math.round(x), 0);
+
+            // 海
+            ctx.fillStyle = P.sea;
+            ctx.fillRect(0, HORIZON, LW, SHORE - HORIZON);
+            ctx.fillStyle = P.seaL;
+            for (let y = HORIZON + 2; y < SHORE; y += 3) {
+                const sp = 0.12 + (y - HORIZON) * 0.012;      // 手前の波ほど はやく ながれる
+                const span = LW + 30;
+                for (let i = 0; i < LW / 22; i++) {
+                    const x = ((i * 22 + hash(i, y) * 18 - dist * sp) % span + span) % span - 15;
+                    ctx.fillRect(Math.round(x), y, 2 + Math.floor(hash(y, i) * 5), 1);
+                }
+            }
+
+            // 浜
+            ctx.fillStyle = P.sand;
+            ctx.fillRect(0, SHORE, LW, LH - SHORE);
+            ctx.fillStyle = P.sandD;
+            ctx.fillRect(0, SHORE, LW, 1);
+            for (let i = 0; i < 70; i++) {
+                const span = LW + 40;
+                const x = ((hash(i, 9) * span - dist) % span + span) % span - 20;
+                const y = SHORE + 3 + Math.floor(hash(i, 4) * (LH - SHORE - 4));
+                ctx.fillRect(Math.round(x), y, 1 + (i % 3 === 0), 1);
+            }
+
+            // 風車（浜の むこう）
+            const tOff = -((dist * 0.45) % 150);
+            for (let x = tOff; x < LW + 20; x += 150) {
+                const bx = Math.round(x + 60), by = SHORE, hub = by - 20;
+                ctx.fillStyle = P.turbine;
+                ctx.fillRect(bx, hub + 1, 1, by - hub - 1);
+                const a = frameT * 0.06 + x * 0.01;
+                for (let b = 0; b < 3; b++) {
+                    const ang = a + b * Math.PI * 2 / 3;
+                    for (let k = 1; k <= 6; k++) ctx.fillRect(bx + Math.round(Math.cos(ang) * k), hub + Math.round(Math.sin(ang) * k), 1, 1);
+                }
+                ctx.fillStyle = Math.sin(frameT * 0.1 + x) > 0 ? '#FF5FA2' : P.turbine;
+                ctx.fillRect(bx, hub, 1, 1);
+            }
+
+            // おやつ・じゃまもの
+            treatsArr.forEach(t => sprite('bone', t.x, t.y + Math.round(Math.sin(frameT * 0.15 + t.x) * 1)));
+            objs.forEach(o => {
+                const flap = Math.floor(frameT / 8) % 2;
+                if (o.type === 'gull') sprite(flap ? 'gull' : 'gull2', o.x, o.y);
+                else if (o.type === 'crab') sprite(flap ? 'crab' : 'crab2', o.x, o.y);
+                else sprite(o.type, o.x, o.y);
+            });
+
+            // 月ちゃん
+            let frame;
+            if (state === 'over') frame = FRAMES.sleep;
+            else if (!dog.onGround) frame = FRAMES.jump;
+            else frame = Math.floor(frameT / (state === 'play' ? 5 : 9)) % 2 ? FRAMES.a : FRAMES.b;
+            drawTsuki(ctx, frame, DOG_X, Math.round(dog.y));
+            if (state === 'over') {
+                ctx.fillStyle = '#F3ECDD';
+                const z = Math.floor(frameT / 20) % 3;
+                ['z', 'zz', 'zzz'][z].split('').forEach((_, i) => ctx.fillRect(DOG_X + 22 + i * 3, Math.round(dog.y) - 3 - i * 3, 2, 2));
+            }
+
+            // つぶつぶ
+            parts.forEach(p => {
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = p.c;
+                ctx.fillRect(Math.round(p.x), Math.round(p.y), 1, 1);
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function stepParts(k) {
+            parts.forEach(p => { p.x += p.vx * k; p.y += p.vy * k; p.vy += 0.08 * k; p.life -= 0.04 * k; });
+            parts = parts.filter(p => p.life > 0);
+        }
+
+        resize();
+        reset();
+        window.addEventListener('resize', resize);
+        let prev = performance.now();
+        function loop(now) {
+            const k = Math.min(3, (now - prev) / (1000 / 60));
+            prev = now;
+            update(k);
+            stepParts(k);
+            render();
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+    })();
+    </script>
+</body>
+</html>

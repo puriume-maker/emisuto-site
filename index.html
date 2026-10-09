@@ -739,6 +739,7 @@
     </div>
     <div class="toast" id="toast" role="status"></div>
 
+    <script src="tsuki-sprite.js"></script>
     <script>
     (() => {
         const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1353,42 +1354,7 @@
         /* ============================================================
            4. 月ちゃん（ドット絵・白いふわふわ）
            ============================================================ */
-        // 白くて ふわふわ、耳は茶色、おでこに白いすじ、鼻に そばかす、くるんと巻いた しっぽ
-        const TSUKI_PAL = {
-            k: '#3A2E2A', W: '#F7F2E8', s: '#D6CCBE', o: '#E07A2E', O: '#B4561C',
-            e: '#14111C', n: '#14111C', f: '#C9733A', r: '#E8343A'
-        };
-        const BODY = [
-            '................k..k....',
-            '...............kokkok...',
-            '..kkk.........kooWoook..',
-            '.kWWWk........koWWWeok..',
-            'kWWsWWk.......kWWWWWfWWn',
-            'kWsWWWk......kWWWWWWWkk.',
-            '.kWWWWk....krWWWWWWk....',
-            '..kWWWkkkkkWWWWWWWWk....',
-            '...kWWWWooWWWWWWWWk.....',
-            '...kWWWooWWWWWWWWsk.....',
-            '...ksWWWWWWWWWWWssk.....'
-        ];
-        const FRAMES = {
-            a: [...BODY,
-                '....kWk.kWk...kWk.kWk...',
-                '....kWk.kWk...kWk.kWk...',
-                '....kk..kk....kk..kk....'],
-            b: [...BODY,
-                '.....kWk.kWk.kWk.kWk....',
-                '....kWk...kWkkWk...kWk..',
-                '...kk......kkkk.....kk..'],
-            sleep: ['', '', '', ...BODY.map(r => r.replace('e', 'k'))]
-        };
-        function paint(c, rows) {
-            const x = c.getContext('2d');
-            x.clearRect(0, 0, c.width, c.height);
-            rows.forEach((row, r) => [...row].forEach((ch, i) => {
-                if (TSUKI_PAL[ch]) { x.fillStyle = TSUKI_PAL[ch]; x.fillRect(i, r, 1, 1); }
-            }));
-        }
+        const { FRAMES, paint } = window.TSUKI;
 
         const dog = document.getElementById('tsuki');
         const dogCv = dog.querySelector('canvas');
@@ -1461,8 +1427,8 @@
         }
 
         document.getElementById('walkBtn').addEventListener('click', () => {
-            showToast('おさんぽゲームは じゅんびちゅう…');
             bark();
+            setTimeout(() => { location.href = 'walk.html'; }, 350);
         });
 
         /* ============================================================
