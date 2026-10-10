@@ -300,7 +300,7 @@
         function reset() {
             dog = { x: LW / 2 - 12, y: -14, vx: 0, vy: 0, dir: 1, squash: 0 };
             leaves = []; bones = []; parts = [];
-            camY = -LH + 16; topY = 0; maxAlt = 0; treats = 0; frameT = 0; milestone = 0; reachedMoon = false;
+            camY = -LH + 16; topY = 0; lastX = LW / 2; maxAlt = 0; treats = 0; frameT = 0; milestone = 0; reachedMoon = false;
             // さいしょの 足場（ちめん）
             leaves.push({ x: -10, y: 0, w: LW + 20, type: 'ground' });
             topY = 0;
@@ -311,20 +311,29 @@
         function altOf(y) { return Math.max(0, Math.floor(-y / 10)); }
 
         // 上のほうに はっぱを つくっていく
+        // 「かならず とどく みち」を つくって、かれはは その あいだに おまけで おく
+        let lastX = LW / 2;
         function fillLeaves() {
             while (topY > camY - 60) {
                 const alt = altOf(topY);
-                const gap = 22 + Math.min(34, alt * 0.03) + Math.random() * 10;
+                const gap = 20 + Math.min(24, alt * 0.02) + Math.random() * 8;     // ジャンプの さいこうてん（約73）より ずっと ひくく
                 const y = topY - gap;
-                const w = Math.max(20, 32 - Math.min(10, alt * 0.006)) + Math.floor(Math.random() * 6);
+                const w = Math.max(22, 32 - Math.min(8, alt * 0.005)) + Math.floor(Math.random() * 6);
                 const r = Math.random();
                 let type = 'leaf';
-                if (r < Math.min(0.32, alt * 0.0006)) type = 'sway';
-                else if (alt > 60 && r < 0.32 + Math.min(0.2, alt * 0.0003)) type = 'dry';
+                if (r < Math.min(0.3, alt * 0.0006)) type = 'sway';
                 else if (r > 0.94) type = 'flower';
-                const x = 4 + Math.random() * (LW - 8 - w);
+                // となりの はっぱから 横に はなれすぎない
+                const cx = Math.max(4 + w / 2, Math.min(LW - 4 - w / 2, lastX + (Math.random() * 2 - 1) * 66));
+                const x = cx - w / 2;
                 leaves.push({ x, y, w, type, ox: x, ph: Math.random() * 6, fall: 0 });
-                if (Math.random() < 0.22 && type !== 'dry') bones.push({ x: x + w / 2 - 4, y: y - 20, got: false });
+                if (Math.random() < 0.22) bones.push({ x: cx - 4, y: y - 20, got: false });
+                // かれは（おまけの 足場。おちても みちは のこる）
+                if (alt > 60 && Math.random() < Math.min(0.35, alt * 0.0004)) {
+                    const dw = 24, dx = 4 + Math.random() * (LW - 8 - dw);
+                    leaves.push({ x: dx, y: y + gap / 2, w: dw, type: 'dry', ox: dx, ph: 0, fall: 0 });
+                }
+                lastX = cx;
                 topY = y;
             }
         }
@@ -414,13 +423,13 @@
             if (state !== 'play') return;
 
             // 左右
-            let want = ((input.right ? 1 : 0) - (input.left ? 1 : 0)) * 2.1;
+            let want = ((input.right ? 1 : 0) - (input.left ? 1 : 0)) * 2.4;
             // おした ところに むかって うごく（ちかづいたら ゆっくり とまる）
             if (input.touchX !== null) {
                 const diff = input.touchX * LW - (dog.x + 12);
-                want = Math.abs(diff) < 3 ? 0 : Math.max(-2.1, Math.min(2.1, diff * 0.12));
+                want = Math.abs(diff) < 3 ? 0 : Math.max(-2.4, Math.min(2.4, diff * 0.14));
             }
-            dog.vx += (want - dog.vx) * Math.min(1, 0.2 * k);
+            dog.vx += (want - dog.vx) * Math.min(1, 0.28 * k);
             if (Math.abs(want) > 0.3) dog.dir = Math.sign(want);
             dog.x += dog.vx * k;
             // 両はしの 木が かべ
