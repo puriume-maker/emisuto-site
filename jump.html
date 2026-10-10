@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>月ちゃん、月へ — すとうえみ</title>
+    <meta name="description" content="月ちゃんが 葉っぱから葉っぱへ ジャンプして 月を めざす ドットゲーム。">
+    <meta property="og:title" content="月ちゃん、月へ — すとうえみ">
+    <meta property="og:description" content="月ちゃんが 葉っぱから葉っぱへ ジャンプして 月を めざす ドットゲーム。">
+    <meta property="og:image" content="https://emisuto.com/ogp.png">
+    <meta property="og:url" content="https://emisuto.com/jump.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #14111C;
+            --ink2: #1E1A29;
+            --ink3: #2B2538;
+            --cream: #F3ECDD;
+            --mute: #9A93A8;
+            --pink: #FF5FA2;
+            --lime: #D4FF3A;
+            --pixel: 'DotGothic16', monospace;
+            --bit: 'Silkscreen', monospace;
+            --grot: 'Space Grotesk', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: var(--ink); overflow-x: clip; }
+        body {
+            color: var(--cream);
+            font-family: var(--pixel);
+            line-height: 1.9;
+            letter-spacing: 0.04em;
+            min-height: 100vh;
+        }
+        a { color: inherit; }
+        ::selection { background: var(--pink); color: var(--ink); }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            font-family: var(--bit);
+            font-size: 13px;
+            letter-spacing: 0.12em;
+        }
+        .hud a { text-decoration: none; font-weight: 700; }
+        .hud .back { font-family: var(--pixel); letter-spacing: 0.05em; color: var(--mute); }
+        .hud .back:hover { color: var(--lime); }
+
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 8px 20px 60px;
+            display: grid;
+            grid-template-columns: minmax(0, 440px) 1fr;
+            gap: 36px;
+            align-items: start;
+        }
+        h1 {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 4px 16px;
+            margin-top: 6px;
+            font-weight: 400;
+        }
+        h1 .en {
+            font-family: var(--grot);
+            font-weight: 700;
+            font-size: clamp(36px, 7vw, 64px);
+            line-height: 1;
+            letter-spacing: -0.02em;
+            color: transparent;
+            -webkit-text-stroke: 1.5px var(--cream);
+        }
+        h1 .ja { font-size: 18px; color: var(--lime); }
+
+        .stage {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            max-height: 78vh;
+            border: 3px solid var(--cream);
+            box-shadow: 8px 8px 0 var(--pink);
+            overflow: hidden;
+            background: var(--ink2);
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        #game {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        .score {
+            position: absolute;
+            left: 10px; top: 8px;
+            display: flex;
+            gap: 14px;
+            font-size: 14px;
+            color: var(--ink);
+            background: rgba(243, 236, 221, 0.9);
+            border: 2px solid var(--ink);
+            padding: 1px 10px;
+            pointer-events: none;
+        }
+        .score b { font-weight: 400; color: #C2306F; }
+
+        .panel {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            width: min(86%, 340px);
+            padding: 20px 20px 22px;
+            background: rgba(20, 17, 28, 0.94);
+            border: 3px solid var(--cream);
+            box-shadow: 6px 6px 0 var(--lime);
+            text-align: center;
+        }
+        .panel[hidden] { display: none; }
+        .panel h2 { font-weight: 400; font-size: 21px; margin-bottom: 4px; }
+        .panel p { font-size: 13px; color: var(--mute); }
+        .panel .stats { margin: 10px 0 2px; font-size: 16px; color: var(--cream); }
+        .panel .stats b { font-weight: 400; color: var(--lime); }
+        .panel .new { color: var(--pink); font-family: var(--bit); font-size: 12px; letter-spacing: 0.15em; animation: blink 0.8s steps(1) infinite; }
+        .btns { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+        .btn {
+            display: inline-block;
+            padding: 8px 18px;
+            font: inherit;
+            font-size: 15px;
+            color: var(--ink);
+            background: var(--lime);
+            border: 2px solid var(--ink);
+            box-shadow: 4px 4px 0 var(--cream);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--pink); }
+        .btn.alt { background: var(--ink2); color: var(--cream); border-color: var(--cream); box-shadow: 4px 4px 0 var(--ink3); }
+
+        .pop {
+            position: absolute;
+            left: 50%; top: 16%;
+            transform: translateX(-50%);
+            padding: 3px 14px;
+            font-size: 15px;
+            color: var(--ink);
+            background: var(--lime);
+            border: 2px solid var(--ink);
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+            transition: opacity 0.2s steps(2);
+        }
+        .pop.on { opacity: 1; }
+
+        .howto { list-style: none; display: grid; gap: 12px; }
+        .howto li {
+            padding: 12px 16px;
+            background: var(--ink2);
+            border: 2px solid var(--ink3);
+            font-size: 14px;
+        }
+        .howto li b { display: block; font-weight: 400; color: var(--lime); font-size: 15px; }
+        .howto kbd {
+            font-family: var(--bit);
+            font-size: 11px;
+            padding: 1px 6px;
+            border: 1px solid var(--mute);
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        @media (max-width: 720px) {
+            .hud { padding: 12px 16px; font-size: 11px; }
+            main { grid-template-columns: 1fr; padding: 4px 14px 50px; gap: 26px; }
+            .stage { max-height: 70vh; box-shadow: 5px 5px 0 var(--pink); margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+    <header class="hud">
+        <a href="./">EMI SUTO</a>
+        <a href="./#party" class="back">← もどる</a>
+    </header>
+
+    <main>
+        <h1><span class="en">TSUKI JUMP</span><span class="ja">月ちゃん、月へ</span></h1>
+
+        <div class="stage" id="stage">
+            <canvas id="game" aria-label="月ちゃんが 葉っぱを ジャンプして 月を めざす ゲーム画面"></canvas>
+            <div class="score">
+                <span>たかさ <b id="alt">0</b>m</span>
+                <span>おやつ <b id="treats">0</b></span>
+            </div>
+            <div class="pop" id="pop"></div>
+
+            <div class="panel" id="titlePanel">
+                <h2>月まで いける？</h2>
+                <p>はっぱを ぴょんぴょん のぼって 月を めざそう</p>
+                <p>ベスト <span id="titleBest">0</span>m</p>
+                <div class="btns">
+                    <button class="btn" id="startBtn" type="button">▶ いく！</button>
+                    <a class="btn alt" href="./#party">やめとく</a>
+                </div>
+            </div>
+
+            <div class="panel" id="overPanel" hidden>
+                <h2 id="overMsg">おちちゃった〜</h2>
+                <p class="new" id="newBest" hidden>NEW RECORD!</p>
+                <div class="stats">たかさ <b id="overAlt">0</b>m ・ おやつ <b id="overTreats">0</b>こ</div>
+                <p>ベスト <span id="overBest">0</span>m</p>
+                <div class="btns">
+                    <button class="btn" id="againBtn" type="button">▶ もういっかい</button>
+                    <a class="btn alt" href="./#party">もどる</a>
+                </div>
+            </div>
+        </div>
+
+        <ul class="howto">
+            <li><b>いどう</b><kbd>←</kbd> <kbd>→</kbd> キー。スマホは 画面の 左はし・右はしを おす。</li>
+            <li><b>ジャンプ</b>はっぱに のると 月ちゃんが じぶんで はねる。</li>
+            <li><b>はっぱ いろいろ</b>花つきは 大ジャンプ。かれはは 1かい のると おちる。ゆれる はっぱも あるよ。</li>
+            <li><b>ワープ</b>画面の はしから でると、はんたいがわから でてくる。</li>
+            <li><b>ゴール？</b>森 → くも → ほし → 月。そのさきは……？</li>
+        </ul>
+    </main>
+
+    <script src="tsuki-sprite.js"></script>
+    <script>
+    (() => {
+        const { FRAMES, draw: drawTsuki } = window.TSUKI;
+        const stage = document.getElementById('stage');
+        const cv = document.getElementById('game');
+        const ctx = cv.getContext('2d');
+        const $ = id => document.getElementById(id);
+
+        /* ============================================================
+           にかほの 時間帯で、スタートの 空の色が かわる
+           ============================================================ */
+        const hr = +new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', hour12: false }).format(new Date()) % 24;
+        const phase = hr >= 5 && hr < 9 ? 'morning' : hr >= 9 && hr < 16 ? 'day' : hr >= 16 && hr < 19 ? 'dusk' : 'night';
+        const BASE = {
+            morning: ['#F8E3C4', '#9CC2EA'],
+            day: ['#DDF1FB', '#5FB2EE'],
+            dusk: ['#F5A04A', '#8F9AB0'],
+            night: ['#2E2A66', '#1B1838']
+        }[phase];
+        // たかさ（0〜1）に あわせた 空の色：地上 → 上空 → 夜空 → 宇宙
+        const SKY = [[0, BASE[0]], [0.3, BASE[1]], [0.65, '#24215A'], [1, '#100D18']];
+        const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+        function skyAt(t) {
+            t = Math.max(0, Math.min(1, t));
+            for (let i = 1; i < SKY.length; i++) {
+                if (t <= SKY[i][0]) {
+                    const [t0, c0] = SKY[i - 1], [t1, c1] = SKY[i];
+                    const u = (t - t0) / (t1 - t0), a = hex(c0), b = hex(c1);
+                    return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * u)).join(',')})`;
+                }
+            }
+            return SKY[SKY.length - 1][1];
+        }
+
+        /* ============================================================
+           画面（ゲームの中は 横180ドット × たて240ドット）
+           ============================================================ */
+        const LW = 180, LH = 240;
+        cv.width = LW; cv.height = LH;
+        ctx.imageSmoothingEnabled = false;
+        const MOON_Y = -20000;          // 2000m のところに 月
+        const hash = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
+
+        /* ============================================================
+           じょうたい
+           ============================================================ */
+        let state = 'title';
+        let dog, leaves, bones, parts, camY, topY, maxAlt, treats, frameT, milestone, reachedMoon;
+        let best = 0;
+        try { best = +localStorage.getItem('tsuki-jump-best') || 0; } catch (e) { /* なくても あそべる */ }
+        $('titleBest').textContent = best;
+
+        function reset() {
+            dog = { x: LW / 2 - 12, y: -14, vx: 0, vy: 0, dir: 1, squash: 0 };
+            leaves = []; bones = []; parts = [];
+            camY = -LH + 16; topY = 0; maxAlt = 0; treats = 0; frameT = 0; milestone = 0; reachedMoon = false;
+            // さいしょの 足場（ちめん）
+            leaves.push({ x: -10, y: 0, w: LW + 20, type: 'ground' });
+            topY = 0;
+            fillLeaves();
+            updateScore();
+        }
+
+        function altOf(y) { return Math.max(0, Math.floor(-y / 10)); }
+
+        // 上のほうに はっぱを つくっていく
+        function fillLeaves() {
+            while (topY > camY - 60) {
+                const alt = altOf(topY);
+                const gap = 22 + Math.min(34, alt * 0.03) + Math.random() * 10;
+                const y = topY - gap;
+                const w = Math.max(20, 32 - Math.min(10, alt * 0.006)) + Math.floor(Math.random() * 6);
+                const r = Math.random();
+                let type = 'leaf';
+                if (r < Math.min(0.32, alt * 0.0006)) type = 'sway';
+                else if (alt > 60 && r < 0.32 + Math.min(0.2, alt * 0.0003)) type = 'dry';
+                else if (r > 0.94) type = 'flower';
+                const x = 4 + Math.random() * (LW - 8 - w);
+                leaves.push({ x, y, w, type, ox: x, ph: Math.random() * 6, fall: 0 });
+                if (Math.random() < 0.22 && type !== 'dry') bones.push({ x: x + w / 2 - 4, y: y - 20, got: false });
+                topY = y;
+            }
+        }
+
+        function updateScore() {
+            $('alt').textContent = maxAlt;
+            $('treats').textContent = treats;
+        }
+
+        let popTimer;
+        function pop(text) {
+            const el = $('pop');
+            el.textContent = text;
+            el.classList.add('on');
+            clearTimeout(popTimer);
+            popTimer = setTimeout(() => el.classList.remove('on'), 1500);
+        }
+
+        function start() {
+            reset();
+            state = 'play';
+            dog.vy = -5;      // さいしょの ひとっとび
+            $('titlePanel').hidden = true;
+            $('overPanel').hidden = true;
+        }
+
+        const OVER_MSG = ['おちちゃった〜', 'ひゅ〜〜〜……', 'ちょっと ひとやすみ', 'また のぼろ！'];
+        function gameOver() {
+            state = 'over';
+            const isBest = maxAlt > best;
+            if (isBest) {
+                best = maxAlt;
+                try { localStorage.setItem('tsuki-jump-best', String(best)); } catch (e) { /* ほぞん できなくても あそべる */ }
+            }
+            $('overMsg').textContent = reachedMoon ? '月を こえて きた！' : OVER_MSG[Math.floor(Math.random() * OVER_MSG.length)];
+            $('newBest').hidden = !isBest;
+            $('overAlt').textContent = maxAlt;
+            $('overTreats').textContent = treats;
+            $('overBest').textContent = best;
+            $('titleBest').textContent = best;
+            $('overPanel').hidden = false;
+        }
+
+        /* ============================================================
+           そうさ：←→ キー / 画面の 左右
+           ============================================================ */
+        const input = { left: false, right: false, touchX: null };
+        window.addEventListener('keydown', e => {
+            if (['ArrowLeft', 'a', 'A'].includes(e.key)) { input.left = true; e.preventDefault(); }
+            if (['ArrowRight', 'd', 'D'].includes(e.key)) { input.right = true; e.preventDefault(); }
+            if ((e.key === ' ' || e.key === 'Enter') && state !== 'play' && !(e.target.closest && e.target.closest('a, button'))) { e.preventDefault(); start(); }
+        });
+        window.addEventListener('keyup', e => {
+            if (['ArrowLeft', 'a', 'A'].includes(e.key)) input.left = false;
+            if (['ArrowRight', 'd', 'D'].includes(e.key)) input.right = false;
+        });
+        function touchAt(e) {
+            const b = cv.getBoundingClientRect();
+            input.touchX = (e.clientX - b.left) / b.width;
+        }
+        cv.addEventListener('pointerdown', e => {
+            e.preventDefault();
+            if (state === 'title') { start(); return; }
+            cv.setPointerCapture(e.pointerId);
+            touchAt(e);
+        });
+        cv.addEventListener('pointermove', e => { if (input.touchX !== null) touchAt(e); });
+        const endTouch = () => { input.touchX = null; };
+        cv.addEventListener('pointerup', endTouch);
+        cv.addEventListener('pointercancel', endTouch);
+        $('startBtn').addEventListener('click', start);
+        $('againBtn').addEventListener('click', start);
+
+        /* ============================================================
+           うごかす
+           ============================================================ */
+        function burst(x, y, color, n, power) {
+            for (let i = 0; i < n; i++) {
+                const a = Math.random() * Math.PI * 2;
+                parts.push({ x, y, vx: Math.cos(a) * power, vy: Math.sin(a) * power - 0.5, life: 1, c: color });
+            }
+        }
+
+        function update(k) {
+            frameT += k;
+            if (state !== 'play') return;
+
+            // 左右
+            let dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+            if (input.touchX !== null) dir = input.touchX < 0.5 ? -1 : 1;
+            dog.vx += (dir * 2.1 - dog.vx) * Math.min(1, 0.2 * k);
+            if (dir) dog.dir = dir;
+            dog.x += dog.vx * k;
+            if (dog.x < -14) dog.x = LW - 10;
+            if (dog.x > LW - 10) dog.x = -14;
+
+            // 上下
+            const prevFeet = dog.y + 14;
+            dog.vy = Math.min(6, dog.vy + 0.17 * k);
+            dog.y += dog.vy * k;
+            const feet = dog.y + 14;
+            dog.squash = Math.max(0, dog.squash - 0.15 * k);
+
+            // ゆれる はっぱ・おちる かれは
+            leaves.forEach(l => {
+                if (l.type === 'sway') l.x = l.ox + Math.sin(frameT * 0.03 + l.ph) * 22;
+                if (l.fall) { l.fall += 0.15 * k; l.y += l.fall * k; }
+            });
+
+            // 着地 → ぴょん
+            if (dog.vy > 0) {
+                for (const l of leaves) {
+                    if (l.fall) continue;
+                    if (prevFeet <= l.y + 1 && feet >= l.y && dog.x + 17 > l.x && dog.x + 7 < l.x + l.w) {
+                        dog.y = l.y - 14;
+                        const big = l.type === 'flower';
+                        dog.vy = big ? -8.6 : -5;
+                        dog.squash = 1;
+                        burst(dog.x + 12, l.y, big ? '#FF5FA2' : l.type === 'dry' ? '#C9873A' : '#8FD16A', big ? 10 : 4, big ? 1.6 : 0.8);
+                        if (big) pop('ぴょーーーん！');
+                        if (l.type === 'dry') l.fall = 0.5;
+                        break;
+                    }
+                }
+            }
+
+            // おやつ
+            bones.forEach(b => {
+                if (!b.got && dog.x + 18 > b.x && dog.x + 6 < b.x + 9 && dog.y + 12 > b.y && dog.y + 2 < b.y + 6) {
+                    b.got = true; treats++;
+                    burst(b.x + 4, b.y + 3, '#D4FF3A', 8, 1.3);
+                    if (treats % 10 === 0) pop(`おやつ ${treats}こ！ しっぽ ぶんぶん`);
+                }
+            });
+
+            // カメラは 上にだけ ついていく
+            const target = dog.y - LH * 0.42;
+            if (target < camY) camY += (target - camY) * Math.min(1, 0.18 * k);
+
+            fillLeaves();
+            leaves = leaves.filter(l => l.y < camY + LH + 40);
+            bones = bones.filter(b => !b.got && b.y < camY + LH + 20);
+
+            const alt = altOf(dog.y);
+            if (alt > maxAlt) maxAlt = alt;
+            const MILESTONES = [[100, 'こずえを こえた！'], [400, 'くもの なかへ'], [1000, 'ほしが ちかい……'], [2000, '月に とうちゃく！'], [3000, '月の むこうがわ？']];
+            MILESTONES.forEach(([at, text]) => {
+                if (maxAlt >= at && milestone < at) {
+                    milestone = at; pop(text);
+                    if (at === 2000) { reachedMoon = true; burst(dog.x + 12, dog.y, '#F3ECDD', 24, 2.2); }
+                }
+            });
+            updateScore();
+
+            if (dog.y > camY + LH + 16) gameOver();
+        }
+
+        /* ============================================================
+           えがく
+           ============================================================ */
+        const sy = y => Math.round(y - camY);
+
+        function drawLeaf(l) {
+            const y = sy(l.y), x = Math.round(l.x), w = Math.round(l.w);
+            if (l.type === 'ground') {
+                ctx.fillStyle = '#4E8A3E'; ctx.fillRect(0, y, LW, 4);
+                ctx.fillStyle = '#3A6B30'; ctx.fillRect(0, y + 4, LW, LH);
+                ctx.fillStyle = '#6BAA4F';
+                for (let i = 0; i < LW; i += 5) ctx.fillRect(i + (i % 3), y - 1 - (i % 2), 1, 2);
+                return;
+            }
+            const C = {
+                leaf: ['#6BAA4F', '#3E7A3A', '#A6DB7A'],
+                sway: ['#B7D94A', '#7FA32E', '#E1F28C'],
+                flower: ['#6BAA4F', '#3E7A3A', '#A6DB7A'],
+                dry: ['#C9873A', '#8A5A2B', '#E8B26A']
+            }[l.type];
+            // はっぱの かたち（まんなかが ふくらんだ 楕円）
+            const rows = [0.32, 0.5, 0.5, 0.4, 0.22];
+            rows.forEach((f, r) => {
+                const hw = Math.max(2, Math.round(w * f));
+                const cx = x + w / 2;
+                ctx.fillStyle = r === 0 ? C[2] : r >= 3 ? C[1] : C[0];
+                ctx.fillRect(Math.round(cx - hw), y + r, hw * 2, 1);
+            });
+            ctx.fillStyle = C[1];
+            ctx.fillRect(x + 3, y + 2, w - 6, 1);           // 葉脈
+            ctx.fillRect(x + w - 1, y + 2, 3, 1);           // くき
+            if (l.type === 'flower') {
+                const fx = Math.round(x + w / 2) - 3, fy = y - 4;
+                ctx.fillStyle = '#FF5FA2';
+                [[1, 0], [3, 0], [0, 1], [1, 1], [3, 1], [4, 1], [1, 2], [2, 2], [3, 2]].forEach(([a, b]) => ctx.fillRect(fx + a, fy + b, 1, 1));
+                ctx.fillStyle = '#FFE58A'; ctx.fillRect(fx + 2, fy + 1, 1, 1);
+            }
+        }
+
+        const BONE = ['.kk...kk.', 'kwwkkkwwk', 'kwwwwwwwk', 'kwwwwwwwk', 'kwwkkkwwk', '.kk...kk.'];
+        function drawBone(b) {
+            const y = sy(b.y) + Math.round(Math.sin(frameT * 0.08 + b.x) * 1.2);
+            BONE.forEach((row, r) => [...row].forEach((ch, i) => {
+                if (ch === '.') return;
+                ctx.fillStyle = ch === 'k' ? '#3A2E2A' : '#F7F2E8';
+                ctx.fillRect(Math.round(b.x) + i, y + r, 1, 1);
+            }));
+        }
+
+        function render() {
+            // 空（上にいくほど 夜→宇宙）
+            for (let y = 0; y < LH; y += 4) {
+                ctx.fillStyle = skyAt(-(camY + y) / 20000);
+                ctx.fillRect(0, y, LW, 4);
+            }
+            const tTop = -camY / 20000;
+
+            // ほし（上空だけ）
+            if (tTop > 0.35 || phase === 'night') {
+                const a = phase === 'night' ? Math.max(0.5, Math.min(1, tTop * 2)) : Math.min(1, (tTop - 0.35) * 3);
+                ctx.fillStyle = '#F3ECDD';
+                const off = Math.floor(camY * 0.3);
+                for (let i = 0; i < 46; i++) {
+                    const y = ((Math.floor(hash(i, 2) * 600) - off) % 600 + 600) % 600;
+                    if (y >= LH) continue;
+                    ctx.globalAlpha = a * (Math.sin(frameT * 0.02 + i) > -0.5 ? 1 : 0.4);
+                    ctx.fillRect(Math.floor(hash(i, 1) * LW), y, 1, 1);
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // 月（2000m の ところ）
+            const my = sy(MOON_Y);
+            if (my > -60 && my < LH + 60) {
+                const mx = LW / 2;
+                for (let y = -26; y <= 26; y++) for (let x = -26; x <= 26; x++) {
+                    const d2 = x * x + y * y;
+                    if (d2 > 26 * 26) continue;
+                    ctx.fillStyle = hash(Math.floor((x + 30) / 4), Math.floor((y + 30) / 4)) > 0.82 ? '#D8CDB4' : '#F3ECDD';
+                    ctx.fillRect(mx + x, my + y, 1, 1);
+                }
+            }
+
+            // くも（400m〜1300m あたり）
+            for (let i = 0; i < 14; i++) {
+                const wy = -4000 - i * 650 - hash(i, 3) * 300;
+                const y = Math.round((wy - camY) * 0.85 + LH * 0.15);
+                if (y < -20 || y > LH + 10) continue;
+                const x = Math.round(hash(i, 4) * (LW + 40) - 20 + Math.sin(frameT * 0.004 + i) * 6);
+                ctx.fillStyle = 'rgba(255,255,255,0.75)';
+                ctx.fillRect(x, y, 34, 5);
+                ctx.fillRect(x + 6, y - 4, 16, 4);
+                ctx.fillRect(x + 14, y - 7, 10, 3);
+            }
+
+            // 森の 木（ひくいところだけ。両はしに 幹と 葉っぱ）
+            if (camY > -8000) {
+                const fade = Math.max(0, Math.min(1, (camY + 8000) / 3000));
+                ctx.globalAlpha = fade;
+                [[0, 7], [LW - 7, 7]].forEach(([tx, tw], side) => {
+                    ctx.fillStyle = '#5A3E2B';
+                    ctx.fillRect(tx, 0, tw, LH);
+                    ctx.fillStyle = '#3F2B1E';
+                    ctx.fillRect(side ? tx : tx + tw - 2, 0, 2, LH);
+                    for (let i = -1; i < 9; i++) {
+                        const wy = Math.floor(camY / 36) * 36 + i * 36 + (side ? 18 : 0);
+                        const y = Math.round(wy - camY);
+                        ctx.fillStyle = '#2F5E2C';
+                        ctx.fillRect(side ? tx - 12 : tx, y, 19, 9);
+                        ctx.fillStyle = '#3E7A3A';
+                        ctx.fillRect(side ? tx - 10 : tx + 2, y - 3, 14, 4);
+                    }
+                });
+                ctx.globalAlpha = 1;
+            }
+
+            leaves.forEach(drawLeaf);
+            bones.forEach(drawBone);
+
+            // 月ちゃん（向きで 反転、着地で ちょっと つぶれる）
+            const frame = dog.vy < -1 ? FRAMES.jump : (state === 'over' ? FRAMES.sleep : FRAMES.a);
+            ctx.save();
+            const dx = Math.round(dog.x), dy = sy(dog.y);
+            const sq = state === 'play' ? dog.squash : 0;
+            ctx.translate(dx + 12, dy + 14);
+            ctx.scale(dog.dir < 0 ? -1 : 1, 1 - sq * 0.15);
+            drawTsuki(ctx, frame, -12, -14);
+            ctx.restore();
+            // ワープ中は はんたいがわにも すこし 見せる
+            if (dx > LW - 24 || dx < 0) {
+                ctx.save();
+                ctx.translate(dx + 12 + (dx < 0 ? LW : -LW), dy + 14);
+                ctx.scale(dog.dir < 0 ? -1 : 1, 1);
+                drawTsuki(ctx, frame, -12, -14);
+                ctx.restore();
+            }
+
+            parts.forEach(p => {
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = p.c;
+                ctx.fillRect(Math.round(p.x), sy(p.y), 1, 1);
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function stepParts(k) {
+            parts.forEach(p => { p.x += p.vx * k; p.y += p.vy * k; p.vy += 0.08 * k; p.life -= 0.035 * k; });
+            parts = parts.filter(p => p.life > 0);
+        }
+
+        reset();
+        let prev = performance.now();
+        function loop(now) {
+            const k = Math.min(3, (now - prev) / (1000 / 60));
+            prev = now;
+            update(k);
+            stepParts(k);
+            render();
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+    })();
+    </script>
+</body>
+</html>
