@@ -580,10 +580,9 @@
             ctx.fillRect(0, HORIZON, LW, SHORE - HORIZON);
             ctx.fillStyle = P.seaL;
             for (let y = HORIZON + 3; y < SHORE; y += 4) {
-                const sp = 0.04 + (y - HORIZON) * 0.006;      // 手前の波ほど ちょっと はやい（目に やさしく ゆっくり）
                 const span = LW + 30;
                 for (let i = 0; i < LW / 40; i++) {
-                    const x = ((i * 40 + hash(i, y) * 18 - dist * sp) % span + span) % span - 15;
+                    const x = ((i * 40 + hash(i, y) * 18) % span + span) % span - 15;   // 波は うごかさない
                     ctx.fillRect(Math.round(x), y, 2 + Math.floor(hash(y, i) * 5), 1);
                 }
             }
@@ -595,13 +594,13 @@
             ctx.fillRect(0, SHORE, LW, 1);
             for (let i = 0; i < 28; i++) {
                 const span = LW + 40;
-                const x = ((hash(i, 9) * span - dist) % span + span) % span - 20;
+                const x = hash(i, 9) * span - 20;   // 砂も うごかさない
                 const y = SHORE + 3 + Math.floor(hash(i, 4) * (LH - SHORE - 4));
                 ctx.fillRect(Math.round(x), y, 1 + (i % 3 === 0), 1);
             }
 
             // 風車（浜の むこう）
-            const tOff = -((dist * 0.25) % 150);
+            const tOff = 0;   // 風車の ばしょは うごかさない（羽だけ まわる）
             for (let x = tOff; x < LW + 20; x += 150) {
                 const bx = Math.round(x + 60), by = SHORE, hub = by - 20;
                 ctx.fillStyle = P.turbine;
