@@ -233,6 +233,7 @@
             <li><b>いどう</b><kbd>←</kbd> <kbd>→</kbd> キー。スマホは 画面の 左はし・右はしを おす。</li>
             <li><b>ジャンプ</b>はっぱに のると 月ちゃんが じぶんで はねる。</li>
             <li><b>はっぱ いろいろ</b>花つきは 大ジャンプ。かれはは 1かい のると おちる。ゆれる はっぱも あるよ。</li>
+            <li><b>木の えだ</b>森の なかでは、両はしの 木の えだにも のれるよ。</li>
             <li><b>ワープ</b>画面の はしから でると、はんたいがわから でてくる。</li>
             <li><b>ゴール？</b>森 → くも → ほし → 月。そのさきは……？</li>
         </ul>
@@ -280,6 +281,12 @@
         cv.width = LW; cv.height = LH;
         ctx.imageSmoothingEnabled = false;
         const MOON_Y = -20000;          // 2000m のところに 月
+
+        // 森の 枝（両はしの 木から 生えてる 足場）。見えてる枝は ぜんぶ のれる
+        const BR = 36, FOREST_TOP = -6000, BR_W = 20;
+        const hasBranch = (n, side) => n * BR + side * 18 > FOREST_TOP && n * BR + side * 18 < -40 && hash(n, side + 7) < 0.4;
+        const branchY = (n, side) => n * BR + side * 18 - 3;
+        const branchX = side => side ? LW - BR_W : 0;
         const hash = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
 
         /* ============================================================
@@ -430,6 +437,7 @@
 
             // 着地 → ぴょん
             if (dog.vy > 0) {
+                let landed = false;
                 for (const l of leaves) {
                     if (l.fall) continue;
                     if (prevFeet <= l.y + 1 && feet >= l.y && dog.x + 17 > l.x && dog.x + 7 < l.x + l.w) {
@@ -440,7 +448,21 @@
                         burst(dog.x + 12, l.y, big ? '#FF5FA2' : l.type === 'dry' ? '#C9873A' : '#8FD16A', big ? 10 : 4, big ? 1.6 : 0.8);
                         if (big) pop('ぴょーーーん！');
                         if (l.type === 'dry') l.fall = 0.5;
+                        landed = true;
                         break;
+                    }
+                }
+                // 木の 枝にも のれる
+                if (!landed) {
+                    const n0 = Math.floor((feet - 30) / BR), n1 = Math.ceil((feet + 30) / BR);
+                    for (let n = n0; n <= n1 && !landed; n++) for (let side = 0; side < 2; side++) {
+                        if (!hasBranch(n, side)) continue;
+                        const by = branchY(n, side), bx = branchX(side);
+                        if (prevFeet <= by + 1 && feet >= by && dog.x + 17 > bx && dog.x + 7 < bx + BR_W) {
+                            dog.y = by - 14; dog.vy = -5; dog.squash = 1;
+                            burst(dog.x + 12, by, '#8FD16A', 4, 0.8);
+                            landed = true; break;
+                        }
                     }
                 }
             }
@@ -580,13 +602,15 @@
                     ctx.fillRect(tx, 0, tw, LH);
                     ctx.fillStyle = '#3F2B1E';
                     ctx.fillRect(side ? tx : tx + tw - 2, 0, 2, LH);
-                    for (let i = -1; i < 9; i++) {
-                        const wy = Math.floor(camY / 36) * 36 + i * 36 + (side ? 18 : 0);
-                        const y = Math.round(wy - camY);
-                        ctx.fillStyle = '#2F5E2C';
-                        ctx.fillRect(side ? tx - 12 : tx, y, 19, 9);
+                    for (let n = Math.floor(camY / BR) - 1; n < Math.ceil((camY + LH) / BR) + 1; n++) {
+                        if (!hasBranch(n, side)) continue;
+                        const y = sy(branchY(n, side)), bx = branchX(side);
+                        ctx.fillStyle = '#5A3E2B';
+                        ctx.fillRect(bx, y + 3, BR_W, 3);                       // えだ
                         ctx.fillStyle = '#3E7A3A';
-                        ctx.fillRect(side ? tx - 10 : tx + 2, y - 3, 14, 4);
+                        ctx.fillRect(bx + (side ? 0 : 2), y, BR_W - 2, 3);      // えだの うえの はっぱ
+                        ctx.fillStyle = '#6BAA4F';
+                        ctx.fillRect(bx + (side ? 2 : 4), y, BR_W - 8, 1);
                     }
                 });
                 ctx.globalAlpha = 1;
