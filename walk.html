@@ -560,7 +560,7 @@
             if (P.stars) {
                 for (let i = 0; i < 40; i++) {
                     const x = Math.floor(hash(i, 1) * LW), y = Math.floor(hash(i, 2) * 80);
-                    if (Math.sin(frameT * 0.05 + i) > -0.3) { ctx.fillStyle = '#F3ECDD'; ctx.fillRect(x, y, 1, 1); }
+                    if (Math.sin(frameT * 0.012 + i) > -0.6) { ctx.fillStyle = '#F3ECDD'; ctx.fillRect(x, y, 1, 1); }
                 }
             }
             if (P.orb === 'moon') {
@@ -573,18 +573,18 @@
             }
 
             // 鳥海山（ゆっくり ながれる）
-            const mOff = -((dist * 0.06) % MTN_TILE);
+            const mOff = -((dist * 0.03) % MTN_TILE);
             for (let x = mOff - MTN_TILE; x < LW; x += MTN_TILE) ctx.drawImage(mtnCv, Math.round(x), 0);
 
             // 海
             ctx.fillStyle = P.sea;
             ctx.fillRect(0, HORIZON, LW, SHORE - HORIZON);
             ctx.fillStyle = P.seaL;
-            for (let y = HORIZON + 2; y < SHORE; y += 3) {
-                const sp = 0.12 + (y - HORIZON) * 0.012;      // 手前の波ほど はやく ながれる
+            for (let y = HORIZON + 3; y < SHORE; y += 4) {
+                const sp = 0.04 + (y - HORIZON) * 0.006;      // 手前の波ほど ちょっと はやい（目に やさしく ゆっくり）
                 const span = LW + 30;
-                for (let i = 0; i < LW / 22; i++) {
-                    const x = ((i * 22 + hash(i, y) * 18 - dist * sp) % span + span) % span - 15;
+                for (let i = 0; i < LW / 40; i++) {
+                    const x = ((i * 40 + hash(i, y) * 18 - dist * sp) % span + span) % span - 15;
                     ctx.fillRect(Math.round(x), y, 2 + Math.floor(hash(y, i) * 5), 1);
                 }
             }
@@ -594,7 +594,7 @@
             ctx.fillRect(0, SHORE, LW, LH - SHORE);
             ctx.fillStyle = P.sandD;
             ctx.fillRect(0, SHORE, LW, 1);
-            for (let i = 0; i < 70; i++) {
+            for (let i = 0; i < 28; i++) {
                 const span = LW + 40;
                 const x = ((hash(i, 9) * span - dist) % span + span) % span - 20;
                 const y = SHORE + 3 + Math.floor(hash(i, 4) * (LH - SHORE - 4));
@@ -602,17 +602,17 @@
             }
 
             // 風車（浜の むこう）
-            const tOff = -((dist * 0.45) % 150);
+            const tOff = -((dist * 0.25) % 150);
             for (let x = tOff; x < LW + 20; x += 150) {
                 const bx = Math.round(x + 60), by = SHORE, hub = by - 20;
                 ctx.fillStyle = P.turbine;
                 ctx.fillRect(bx, hub + 1, 1, by - hub - 1);
-                const a = frameT * 0.06 + x * 0.01;
+                const a = frameT * 0.025 + x * 0.01;
                 for (let b = 0; b < 3; b++) {
                     const ang = a + b * Math.PI * 2 / 3;
                     for (let k = 1; k <= 6; k++) ctx.fillRect(bx + Math.round(Math.cos(ang) * k), hub + Math.round(Math.sin(ang) * k), 1, 1);
                 }
-                ctx.fillStyle = Math.sin(frameT * 0.1 + x) > 0 ? '#FF5FA2' : P.turbine;
+                ctx.fillStyle = Math.sin(frameT * 0.03 + x) > 0 ? '#FF5FA2' : P.turbine;
                 ctx.fillRect(bx, hub, 1, 1);
             }
 
