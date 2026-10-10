@@ -408,8 +408,67 @@
         .memo-night ul { list-style: none; display: grid; gap: 8px; }
         .memo-night li::before { content: "＊ "; color: var(--lime); }
 
+        /* ===== NOTES（ノートの 表紙） ===== */
+        .notebooks {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 260px));
+            justify-content: center;
+            gap: 40px;
+            padding: 10px 0 20px;
+        }
+        .notebook {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            aspect-ratio: 5 / 7;
+            padding: 22px 18px 18px 34px;
+            color: var(--ink);
+            text-decoration: none;
+            border: 3px solid var(--ink);
+            box-shadow: 8px 8px 0 var(--cream);
+            transition: transform 0.15s steps(3), box-shadow 0.15s steps(3);
+        }
+        .notebook::before {                          /* 背表紙 */
+            content: "";
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 18px;
+            background: rgba(20, 17, 28, 0.85);
+            box-shadow: inset -3px 0 0 rgba(243, 236, 221, 0.25);
+        }
+        .nb-ai { background: var(--blue) repeating-linear-gradient(90deg, transparent 0 22px, rgba(255,255,255,0.08) 22px 24px); transform: rotate(-3deg); }
+        .nb-loop { background: var(--orange) repeating-linear-gradient(0deg, transparent 0 22px, rgba(255,255,255,0.1) 22px 24px); transform: rotate(2.5deg); }
+        .notebook:hover { transform: rotate(0deg) translateY(-8px); box-shadow: 10px 14px 0 var(--lime); }
+        .nb-no { align-self: flex-end; font-family: var(--bit); font-size: 12px; letter-spacing: 0.1em; color: var(--cream); }
+        .nb-label {
+            margin-top: 16%;
+            width: 100%;
+            padding: 12px 10px 14px;
+            background: var(--cream);
+            border: 2px solid var(--ink);
+            text-align: center;
+            line-height: 1.6;
+        }
+        .nb-sub { display: block; font-family: var(--bit); font-size: 10px; letter-spacing: 0.25em; opacity: 0.55; border-bottom: 1px dashed var(--ink); padding-bottom: 6px; margin-bottom: 8px; }
+        .nb-title { display: block; font-size: 17px; }
+        .nb-name {
+            margin-top: auto;
+            width: 100%;
+            font-family: var(--bit);
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            color: var(--cream);
+            border-bottom: 2px solid var(--cream);
+            padding-bottom: 2px;
+        }
+        .nb-name b { font-family: var(--pixel); font-weight: 400; font-size: 14px; letter-spacing: 0.05em; margin-left: 6px; }
+        .nb-url { margin-top: 8px; align-self: flex-start; font-size: 11px; color: var(--cream); opacity: 0.8; }
+
         /* ===== LETTER ===== */
         .letter p { font-size: 17px; }
+        .letter .places-head { margin-top: 30px; padding-top: 22px; border-top: 2px dashed var(--ink3); font-size: 14px; color: var(--mute); }
+        .letter .places { margin-top: 12px; }
         .btns { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 26px; }
         .btn {
             display: inline-block;
@@ -526,6 +585,12 @@
             .party { grid-template-columns: 1fr; }
             .party-sprite { justify-self: start; }
             .memo-body { padding: 22px 18px; }
+            .notebooks { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+            .notebook { padding: 14px 10px 12px 26px; }
+            .notebook::before { width: 14px; }
+            .nb-title { font-size: 13px; }
+            .nb-name b { font-size: 11px; }
+            .nb-url { font-size: 9px; }
             .memo-save dl > div { grid-template-columns: 1fr; gap: 0; }
         }
 
@@ -623,7 +688,7 @@
                 <li class="q reveal">
                     <span class="q-no">01</span>
                     <div>
-                        <p class="q-title">鳥海山で 山伏修行を ひらく</p>
+                        <p class="q-title"><a href="https://chokaimikumari.com/" target="_blank" rel="noopener">鳥海山で 山伏修行を ひらく</a></p>
                         <p class="q-sub">企画・主催 ／ 2022 – 2026 ／ うんどうおんち なのに ／ らいねんも……？</p>
                     </div>
                     <span class="stamp continue">CONTINUE?</span>
@@ -736,6 +801,33 @@
         </div>
     </section>
 
+    <!-- ===== NOTES ===== -->
+    <section class="sec" id="notes">
+        <div class="wrap">
+            <h2 class="sec-title reveal"><span class="en">NOTES</span><span class="ja">ノート</span></h2>
+            <div class="notebooks reveal">
+                <a class="notebook nb-ai" href="https://note.com/eminooto" target="_blank" rel="noopener">
+                    <span class="nb-no">No.1</span>
+                    <span class="nb-label">
+                        <span class="nb-sub">NOTEBOOK</span>
+                        <span class="nb-title">AIの<br>べんきょう ノート</span>
+                    </span>
+                    <span class="nb-name">NAME <b>すとうえみ</b></span>
+                    <span class="nb-url">note.com/eminooto</span>
+                </a>
+                <a class="notebook nb-loop" href="https://note.com/loop3" target="_blank" rel="noopener">
+                    <span class="nb-no">No.2</span>
+                    <span class="nb-label">
+                        <span class="nb-sub">NOTEBOOK</span>
+                        <span class="nb-title">きょうみの ある ことの<br>個人編集ノート</span>
+                    </span>
+                    <span class="nb-name">NAME <b>すとうえみ</b></span>
+                    <span class="nb-url">note.com/loop3</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- ===== LETTER ===== -->
     <section class="sec" id="letter">
         <div class="wrap">
@@ -744,8 +836,12 @@
                 <p>なにか あれば ここから どうぞ。<br>ちきゅうじん は よろこびます。</p>
                 <div class="btns">
                     <a class="btn" href="https://forms.gle/1YHcaffn8vGJJfLJA" target="_blank" rel="noopener">てがみを かく</a>
-                    <a class="btn alt" href="https://note.com/eminooto" target="_blank" rel="noopener">NOTEを よむ</a>
-                    <a class="btn alt" href="https://hamanoie.com/" target="_blank" rel="noopener">山と月と浜の家へ</a>
+                </div>
+                <p class="places-head">ほかの ばしょ</p>
+                <div class="btns places">
+                    <a class="btn alt" href="https://www.facebook.com/emi.suto.58" target="_blank" rel="noopener">Facebook</a>
+                    <a class="btn alt" href="https://chokaimikumari.com/" target="_blank" rel="noopener">鳥海山 山伏修行</a>
+                    <a class="btn alt" href="https://hamanoie.com/" target="_blank" rel="noopener">山と月と浜の家</a>
                 </div>
             </div>
         </div>
