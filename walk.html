@@ -572,9 +572,8 @@
                 for (let y = -8; y <= 8; y++) for (let x = -8; x <= 8; x++) if (x * x + y * y <= 60 && sy + y < HORIZON) ctx.fillRect(Math.round(LW * 0.72) + x, sy + y, 1, 1);
             }
 
-            // 鳥海山（ゆっくり ながれる）
-            const mOff = -((dist * 0.03) % MTN_TILE);
-            for (let x = mOff - MTN_TILE; x < LW; x += MTN_TILE) ctx.drawImage(mtnCv, Math.round(x), 0);
+            // 鳥海山（うごかない。遠くで どっしり）
+            ctx.drawImage(mtnCv, Math.round(LW * 0.45 - 122), 0);
 
             // 海
             ctx.fillStyle = P.sea;
