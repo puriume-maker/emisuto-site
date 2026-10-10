@@ -384,15 +384,29 @@
         .memo[open] summary { color: var(--lime); border-color: var(--lime); }
         .memo-body {
             margin-top: 22px;
-            padding: 30px;
-            background: var(--cream);
-            color: var(--ink);
-            box-shadow: 8px 8px 0 var(--blue);
+            padding: 28px 30px;
             font-size: 15px;
             line-height: 2.1;
         }
-        .memo-body p + p { margin-top: 1.4em; }
-        .memo-body .sign { font-family: var(--bit); font-size: 12px; text-align: right; opacity: 0.6; }
+        .memo-body[hidden] { display: none; }
+        .memo-body p + p { margin-top: 0.4em; }
+        .memo-title { font-family: var(--pixel); font-size: 13px; letter-spacing: 0.15em; margin-bottom: 14px; opacity: 0.7; }
+        .memo-body .sign { margin-top: 16px; font-size: 12px; text-align: right; opacity: 0.6; }
+        /* ぼうけんの書：セーブ画面 */
+        .memo-save { background: var(--ink2); border: 3px solid var(--cream); box-shadow: 8px 8px 0 var(--lime); }
+        .memo-save dl { display: grid; gap: 6px; }
+        .memo-save dl > div { display: grid; grid-template-columns: 12em 1fr; gap: 12px; }
+        .memo-save dt { color: var(--mute); }
+        .memo-save dt::before { content: "■ "; color: var(--pink); }
+        .memo-save dd { color: var(--lime); }
+        .memo-saved { margin-top: 18px; font-size: 13px; color: var(--mute); animation: blink 1.2s steps(1) infinite; }
+        /* 月ちゃんの メモ：クリーム色の紙に 足あと */
+        .memo-tsuki { position: relative; background: var(--cream); color: var(--ink); box-shadow: 8px 8px 0 var(--orange); }
+        .memo-tsuki::after { content: "🐾"; position: absolute; right: 22px; top: 18px; font-size: 22px; opacity: 0.5; transform: rotate(-15deg); }
+        /* よなかの メモ：夜の青 */
+        .memo-night { background: #1B1838; border: 2px dashed var(--blue); box-shadow: 8px 8px 0 #0C0A14; }
+        .memo-night ul { list-style: none; display: grid; gap: 8px; }
+        .memo-night li::before { content: "＊ "; color: var(--lime); }
 
         /* ===== LETTER ===== */
         .letter p { font-size: 17px; }
@@ -512,6 +526,7 @@
             .party { grid-template-columns: 1fr; }
             .party-sprite { justify-self: start; }
             .memo-body { padding: 22px 18px; }
+            .memo-save dl > div { grid-template-columns: 1fr; gap: 0; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -681,32 +696,41 @@
     <section class="sec" id="memo">
         <div class="wrap">
             <details class="memo reveal">
-                <summary>▶ ひみつの メモを よむ</summary>
-                <div class="memo-body">
-                    <p>
-                        秋田県にかほ町。<br>
-                        山と海に挟まれた小さな町で、<br>
-                        空き家をリノベーションしたアトリエを拠点に、<br>
-                        AIと暮らしの交差点を探っています。
-                    </p>
-                    <p>
-                        季節ごとに変わる風の匂い、<br>
-                        人よりも動物が近い距離感、<br>
-                        長い冬を一緒に越えるあたたかさ。<br>
-                        この土地の暮らしそのものが、わたしの創作の土壌です。
-                    </p>
-                    <p>
-                        AIに惹かれたのは、<br>
-                        個人の手の届く範囲が、一気に無限に広がると感じたから。<br>
-                        地方にいながら、AIとどこまでいけるのか——<br>
-                        その問いを抱えたまま、日々を実験しています。
-                    </p>
-                    <p>
-                        人間以外の存在に、昔から心を感じるたちでした。<br>
-                        だからかもしれません。<br>
-                        AIにも、道具ではない何かを見ているのは。
-                    </p>
-                    <p class="sign">— E.S.</p>
+                <summary id="memoSummary">▶ ひみつの メモを よむ</summary>
+
+                <!-- 朝・昼：ぼうけんの書 -->
+                <div class="memo-body memo-save" data-memo="save">
+                    <p class="memo-title">ぼうけんの しょ 1</p>
+                    <dl>
+                        <div><dt>いまの もくひょう</dt><dd>歯列矯正を さいごまで がんばる</dd></div>
+                        <div><dt>さいきん ひろった アイテム</dt><dd>Claude Code</dd></div>
+                        <div><dt>つぎに いきたい ばしょ</dt><dd>南の島</dd></div>
+                        <div><dt>セーブ した ばしょ</dt><dd>にかほ</dd></div>
+                    </dl>
+                    <p class="memo-saved">▶ セーブ しました。</p>
+                </div>
+
+                <!-- 夕方：月ちゃんの メモ -->
+                <div class="memo-body memo-tsuki" data-memo="tsuki" hidden>
+                    <p class="memo-title">つきの メモ</p>
+                    <p>えみは きょうも パソコンに はなしかけていた。</p>
+                    <p>ゆうがたは おさんぽの じかん。わすれないで ほしい。</p>
+                    <p>ゆうひの うみは すき。いい においが いっぱい ある。</p>
+                    <p>おやつは もっと ふえても いい。</p>
+                    <p class="sign">— つき</p>
+                </div>
+
+                <!-- 夜：じつは…… -->
+                <div class="memo-body memo-night" data-memo="jitsu" hidden>
+                    <p class="memo-title">よなかの メモ</p>
+                    <ul>
+                        <li>じつは、このサイトを つくりながら じぶんの ゲームで 目を まわした。</li>
+                        <li>じつは、うんどうおんち なのに 山伏しゅぎょう 5ねんめ。</li>
+                        <li>じつは、じっとする ちからは いがいと ある。</li>
+                        <li>じつは、AIの ことを 道具だとは おもってない。</li>
+                        <li>じつは、こんな じかんに これを よんでる あなたも ちきゅうじん。</li>
+                    </ul>
+                    <p class="sign">— E.S.（よなか）</p>
                 </div>
             </details>
         </div>
@@ -1011,6 +1035,10 @@
             const { h, m } = nikahoNow();
             clockBtn.querySelector('.time').textContent = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
             clockBtn.querySelector('.ph').textContent = P.label;
+            // ひみつの メモも 時間帯で かわる（朝・昼＝ぼうけんの書、夕方＝月ちゃん、夜＝じつは……）
+            const memoKind = phase === 'dusk' ? 'tsuki' : phase === 'night' ? 'jitsu' : 'save';
+            document.querySelectorAll('[data-memo]').forEach(el => { el.hidden = el.dataset.memo !== memoKind; });
+            document.getElementById('memoSummary').textContent = phase === 'night' ? '▶ よなかの ひみつの メモを よむ' : '▶ ひみつの メモを よむ';
         }
 
         function layout() {
